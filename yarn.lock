@@ -1341,6 +1341,21 @@
     "@ethersproject/properties" "^5.6.0"
     "@ethersproject/strings" "^5.6.1"
 
+"@ethersproject/abi@5.6.4":
+  version "5.6.4"
+  resolved "https://registry.yarnpkg.com/@ethersproject/abi/-/abi-5.6.4.tgz#f6e01b6ed391a505932698ecc0d9e7a99ee60362"
+  integrity sha512-TTeZUlCeIHG6527/2goZA6gW5F8Emoc7MrZDC7hhP84aRGvW3TEdTnZR08Ls88YXM1m2SuK42Osw/jSi3uO8gg==
+  dependencies:
+    "@ethersproject/address" "^5.6.1"
+    "@ethersproject/bignumber" "^5.6.2"
+    "@ethersproject/bytes" "^5.6.1"
+    "@ethersproject/constants" "^5.6.1"
+    "@ethersproject/hash" "^5.6.1"
+    "@ethersproject/keccak256" "^5.6.1"
+    "@ethersproject/logger" "^5.6.0"
+    "@ethersproject/properties" "^5.6.0"
+    "@ethersproject/strings" "^5.6.1"
+
 "@ethersproject/abstract-provider@5.5.1", "@ethersproject/abstract-provider@^5.5.0":
   version "5.5.1"
   resolved "https://registry.npmjs.org/@ethersproject/abstract-provider/-/abstract-provider-5.5.1.tgz"
@@ -1667,6 +1682,13 @@
   version "5.6.3"
   resolved "https://registry.yarnpkg.com/@ethersproject/networks/-/networks-5.6.3.tgz#3ee3ab08f315b433b50c99702eb32e0cf31f899f"
   integrity sha512-QZxRH7cA5Ut9TbXwZFiCyuPchdWi87ZtVNHWZd0R6YFgYtes2jQ3+bsslJ0WdyDe0i6QumqtoYqvY3rrQFRZOQ==
+  dependencies:
+    "@ethersproject/logger" "^5.6.0"
+
+"@ethersproject/networks@5.6.4":
+  version "5.6.4"
+  resolved "https://registry.yarnpkg.com/@ethersproject/networks/-/networks-5.6.4.tgz#51296d8fec59e9627554f5a8a9c7791248c8dc07"
+  integrity sha512-KShHeHPahHI2UlWdtDMn2lJETcbtaJge4k7XSjDR9h79QTd6yQJmv6Cp2ZA4JdqWnhszAOLSuJEd9C0PRw7hSQ==
   dependencies:
     "@ethersproject/logger" "^5.6.0"
 
@@ -2001,35 +2023,35 @@
     "@ethersproject/properties" "^5.6.0"
     "@ethersproject/strings" "^5.6.1"
 
-"@gnosis.pm/safe-apps-provider@0.10.3":
-  version "0.10.3"
-  resolved "https://registry.yarnpkg.com/@gnosis.pm/safe-apps-provider/-/safe-apps-provider-0.10.3.tgz#0ce03a3e96920c375a56a66329e610b845396c00"
-  integrity sha512-KA3kXNqW2eSPiNnaTgB+abdYpWveuO43S4Z/vSnB+4rLyLk7d2AiBk4IHhiZgpet2xqn7Q19e/kJIeE/Cd/ndA==
+"@gnosis.pm/safe-apps-provider@0.11.1":
+  version "0.11.1"
+  resolved "https://registry.yarnpkg.com/@gnosis.pm/safe-apps-provider/-/safe-apps-provider-0.11.1.tgz#febbaa8878f69bdc74ac33a21006eb70e036f7da"
+  integrity sha512-gVhNtiF09GIUjQgjKdtnSXc1hDFF3DPCiDN2+6u/wI/nnLg8+3tjQZWqOLnJ3qnee/GbIb3AV1fWVN7DDJH4QA==
   dependencies:
-    "@gnosis.pm/safe-apps-sdk" "7.2.0"
+    "@gnosis.pm/safe-apps-sdk" "7.4.0"
     events "^3.3.0"
 
-"@gnosis.pm/safe-apps-sdk@7.2.0":
-  version "7.2.0"
-  resolved "https://registry.yarnpkg.com/@gnosis.pm/safe-apps-sdk/-/safe-apps-sdk-7.2.0.tgz#99a39d37b6472c27052249259e2b2246fb0d14f4"
-  integrity sha512-Lz11y7mTBpnyWDiBC7y353kKCC26+5m1RjOdlwrm0Xy0dS8g9m9YP//wCfJsngjUBxN0QP3mrnv0sfOfvckRdA==
+"@gnosis.pm/safe-apps-sdk@7.4.0":
+  version "7.4.0"
+  resolved "https://registry.yarnpkg.com/@gnosis.pm/safe-apps-sdk/-/safe-apps-sdk-7.4.0.tgz#05d9ba4fa21961161c2869e22e81534990294901"
+  integrity sha512-7YYtEnOioRWo7Lre2XBRxNlCFBseqizWBmkYcjPFBMP8K9blBrntyRo/jr+FdK+wss+85n80RatAP0v8KjmDSg==
   dependencies:
-    "@gnosis.pm/safe-react-gateway-sdk" "^2.10.0"
-    ethers "^5.4.7"
+    "@gnosis.pm/safe-react-gateway-sdk" "^3.1.1"
+    ethers "^5.6.8"
 
-"@gnosis.pm/safe-apps-web3-react@^1.2.0":
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/@gnosis.pm/safe-apps-web3-react/-/safe-apps-web3-react-1.2.0.tgz#5c38643367b62625c6cd7abec3cae527b4d821a8"
-  integrity sha512-hs4jXnrlNDXd8dBZRC5aFJCrsuI0n7WZzXotTg6A8DskHFwzNhNMI5jZMqzmvLihqb/afxfF6jtegrp+TYadWg==
+"@gnosis.pm/safe-apps-web3-react@^1.4.0":
+  version "1.4.0"
+  resolved "https://registry.yarnpkg.com/@gnosis.pm/safe-apps-web3-react/-/safe-apps-web3-react-1.4.0.tgz#129f3b976776486c74a78bb3a984c7b0f9f71c4c"
+  integrity sha512-ze2TZvfRzjT2picT5TukWAwCxUnfdVH/K95rT9OtzHg9dok5anqnoTWzD3jOPV0a8w509TNc4q5cstf+XakaXQ==
   dependencies:
-    "@gnosis.pm/safe-apps-provider" "0.10.3"
-    "@gnosis.pm/safe-apps-sdk" "7.2.0"
+    "@gnosis.pm/safe-apps-provider" "0.11.1"
+    "@gnosis.pm/safe-apps-sdk" "7.4.0"
     "@web3-react/abstract-connector" "6.0.7"
 
-"@gnosis.pm/safe-react-gateway-sdk@^2.10.0":
-  version "2.10.0"
-  resolved "https://registry.yarnpkg.com/@gnosis.pm/safe-react-gateway-sdk/-/safe-react-gateway-sdk-2.10.0.tgz#88e2307d21d548ea43dde8fa33630d3539e39741"
-  integrity sha512-P0A6XgjpEwCzZpk0vjLOYuaOmXL020khJF9FQRwCYPrllPUzrGjpm5gdqExNdnefrrDUKeWUumkucoXqBaMblA==
+"@gnosis.pm/safe-react-gateway-sdk@^3.1.1":
+  version "3.1.2"
+  resolved "https://registry.yarnpkg.com/@gnosis.pm/safe-react-gateway-sdk/-/safe-react-gateway-sdk-3.1.2.tgz#071a52a10ba37aa56513c06f086671d0e1b6c898"
+  integrity sha512-/7TPxXqFyoK8PjbBm6YygTwx+VUUTNxFp8F3ceY3jmJhWdtek+Wrr4o20HzPN1nidO9qiKjgoyQLg1fgjSVopw==
   dependencies:
     cross-fetch "^3.1.5"
 
@@ -6218,7 +6240,7 @@ ethereumjs-util@^7.1.0:
     ethereum-cryptography "^0.1.3"
     rlp "^2.2.4"
 
-ethers@^5.4.7, ethers@^5.5.0:
+ethers@^5.5.0:
   version "5.5.4"
   resolved "https://registry.npmjs.org/ethers/-/ethers-5.5.4.tgz"
   integrity sha512-N9IAXsF8iKhgHIC6pquzRgPBJEzc9auw3JoRkaKe+y4Wl/LFBtDDunNe7YmdomontECAcC5APaAgWZBiu1kirw==
@@ -6275,6 +6297,42 @@ ethers@^5.6.5:
     "@ethersproject/keccak256" "5.6.1"
     "@ethersproject/logger" "5.6.0"
     "@ethersproject/networks" "5.6.3"
+    "@ethersproject/pbkdf2" "5.6.1"
+    "@ethersproject/properties" "5.6.0"
+    "@ethersproject/providers" "5.6.8"
+    "@ethersproject/random" "5.6.1"
+    "@ethersproject/rlp" "5.6.1"
+    "@ethersproject/sha2" "5.6.1"
+    "@ethersproject/signing-key" "5.6.2"
+    "@ethersproject/solidity" "5.6.1"
+    "@ethersproject/strings" "5.6.1"
+    "@ethersproject/transactions" "5.6.2"
+    "@ethersproject/units" "5.6.1"
+    "@ethersproject/wallet" "5.6.2"
+    "@ethersproject/web" "5.6.1"
+    "@ethersproject/wordlists" "5.6.1"
+
+ethers@^5.6.8:
+  version "5.6.9"
+  resolved "https://registry.yarnpkg.com/ethers/-/ethers-5.6.9.tgz#4e12f8dfcb67b88ae7a78a9519b384c23c576a4d"
+  integrity sha512-lMGC2zv9HC5EC+8r429WaWu3uWJUCgUCt8xxKCFqkrFuBDZXDYIdzDUECxzjf2BMF8IVBByY1EBoGSL3RTm8RA==
+  dependencies:
+    "@ethersproject/abi" "5.6.4"
+    "@ethersproject/abstract-provider" "5.6.1"
+    "@ethersproject/abstract-signer" "5.6.2"
+    "@ethersproject/address" "5.6.1"
+    "@ethersproject/base64" "5.6.1"
+    "@ethersproject/basex" "5.6.1"
+    "@ethersproject/bignumber" "5.6.2"
+    "@ethersproject/bytes" "5.6.1"
+    "@ethersproject/constants" "5.6.1"
+    "@ethersproject/contracts" "5.6.2"
+    "@ethersproject/hash" "5.6.1"
+    "@ethersproject/hdnode" "5.6.2"
+    "@ethersproject/json-wallets" "5.6.1"
+    "@ethersproject/keccak256" "5.6.1"
+    "@ethersproject/logger" "5.6.0"
+    "@ethersproject/networks" "5.6.4"
     "@ethersproject/pbkdf2" "5.6.1"
     "@ethersproject/properties" "5.6.0"
     "@ethersproject/providers" "5.6.8"
