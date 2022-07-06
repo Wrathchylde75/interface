@@ -31,7 +31,7 @@
   },
   "dependencies": {
     "@aave/contract-helpers": "1.2.1",
-    "@aave/math-utils": "1.3.2",
+    "@aave/math-utils": "1.3.6",
     "@apollo/client": "^3.6.3",
     "@emotion/cache": "latest",
     "@emotion/react": "latest",
