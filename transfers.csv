@@ -1,0 +1,2 @@
+Type,ID,Created,Description,Amount,Currency,Converted Amount,Fees,Net,Converted Currency,Details,Customer ID,Customer Email
+Charge,ch_3L7kOUGfAoPsfBu41kDz7EHX,2022-06-06 18:11,Created by stripe.com/docs demo,50.00,usd,50.00,2.25,47.75,usd,
