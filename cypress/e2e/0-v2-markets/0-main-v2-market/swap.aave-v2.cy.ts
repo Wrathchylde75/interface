@@ -1,9 +1,9 @@
+import assets from '../../../fixtures/assets.json';
+import constants from '../../../fixtures/constans.json';
 import { skipState } from '../../../support/steps/common';
 import { configEnvWithTenderlyMainnetFork } from '../../../support/steps/configuration.steps';
 import { supply, swap } from '../../../support/steps/main.steps';
-import assets from '../../../fixtures/assets.json';
 import { dashboardAssetValuesVerification } from '../../../support/steps/verification.steps';
-import constants from '../../../fixtures/constans.json';
 
 const testData = {
   deposit: {
@@ -40,7 +40,7 @@ const testData = {
   },
 };
 
-describe.skip('SWAP, AAVE V2 MARKET, INTEGRATION SPEC', () => {
+describe('SWAP, AAVE V2 MARKET, INTEGRATION SPEC', () => {
   const skipTestState = skipState(false);
   configEnvWithTenderlyMainnetFork({});
 

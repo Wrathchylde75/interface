@@ -1,13 +1,13 @@
-import { configEnvWithTenderlyOptimismFork } from '../../../support/steps/configuration.steps';
-import { supply, borrow, emodeActivating } from '../../../support/steps/main.steps';
-import { skipState } from '../../../support/steps/common';
 import assets from '../../../fixtures/assets.json';
 import constants from '../../../fixtures/constans.json';
+import { skipState } from '../../../support/steps/common';
+import { configEnvWithTenderlyOptimismFork } from '../../../support/steps/configuration.steps';
+import { borrow, emodeActivating, supply } from '../../../support/steps/main.steps';
 import {
-  checkDashboardHealthFactor,
   borrowsAvailable,
-  verifyCountOfBorrowAssets,
+  checkDashboardHealthFactor,
   checkEmodeActivatingDisabled,
+  verifyCountOfBorrowAssets,
 } from '../../../support/steps/verification.steps';
 
 const testData = {
@@ -40,7 +40,7 @@ const testData = {
     },
     eModeAssets: [
       assets.optimismMarket.DAI,
-      // assets.optimismMarket.USDT,
+      assets.optimismMarket.USDT,
       assets.optimismMarket.USDC,
       assets.optimismMarket.sUSD,
     ],

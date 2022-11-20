@@ -1,8 +1,8 @@
-import { configEnvWithTenderlyMainnetFork } from '../../../support/steps/configuration.steps';
-import { supply, borrow, withdraw } from '../../../support/steps/main.steps';
-import { skipState } from '../../../support/steps/common';
 import assets from '../../../fixtures/assets.json';
 import constants from '../../../fixtures/constans.json';
+import { skipState } from '../../../support/steps/common';
+import { configEnvWithTenderlyMainnetFork } from '../../../support/steps/configuration.steps';
+import { borrow, supply, withdraw } from '../../../support/steps/main.steps';
 import { checkDashboardHealthFactor } from '../../../support/steps/verification.steps';
 
 const testData = {
@@ -13,11 +13,12 @@ const testData = {
       hasApproval: true,
     },
     borrow: {
-      asset: assets.aaveMarket.ETH,
+      asset: assets.aaveMarket.USDC,
       amount: 1,
       apyType: constants.borrowAPYType.variable,
-      hasApproval: false,
+      hasApproval: true,
       isRisk: true,
+      isMaxAmount: true,
     },
     deposit2: {
       asset: assets.aaveMarket.ETH,

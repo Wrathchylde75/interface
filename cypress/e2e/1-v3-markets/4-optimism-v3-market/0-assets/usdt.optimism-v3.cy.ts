@@ -1,18 +1,18 @@
+import assets from '../../../../fixtures/assets.json';
+import constants from '../../../../fixtures/constans.json';
+import { skipState } from '../../../../support/steps/common';
 import { configEnvWithTenderlyOptimismFork } from '../../../../support/steps/configuration.steps';
 import {
-  supply,
   borrow,
-  repay,
-  withdraw,
   changeBorrowType,
+  repay,
+  supply,
+  withdraw,
 } from '../../../../support/steps/main.steps';
 import {
   dashboardAssetValuesVerification,
   switchCollateralBlocked,
 } from '../../../../support/steps/verification.steps';
-import { skipState } from '../../../../support/steps/common';
-import assets from '../../../../fixtures/assets.json';
-import constants from '../../../../fixtures/constans.json';
 
 const testData = {
   depositBaseAmount: {
@@ -101,8 +101,7 @@ const testData = {
   },
 };
 
-//Debt Ceiling max
-describe.skip('USDT INTEGRATION SPEC, OPTIMISM V3 MARKET', () => {
+describe('USDT INTEGRATION SPEC, OPTIMISM V3 MARKET', () => {
   const skipTestState = skipState(false);
   configEnvWithTenderlyOptimismFork({ v3: true });
 

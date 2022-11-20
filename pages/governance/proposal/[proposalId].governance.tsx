@@ -15,18 +15,24 @@ import {
   useTheme,
 } from '@mui/material';
 import dayjs from 'dayjs';
+import AaveMetaImage from 'public/aaveMetaLogo-min.jpg';
 import { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Meta } from 'src/components/Meta';
 import { CheckBadge } from 'src/components/primitives/CheckBadge';
 import { FormattedNumber } from 'src/components/primitives/FormattedNumber';
+import { Link } from 'src/components/primitives/Link';
 import { Row } from 'src/components/primitives/Row';
+import { Warning } from 'src/components/primitives/Warning';
+import { GovVoteModal } from 'src/components/transactions/GovVote/GovVoteModal';
 import { GovernanceDataProvider } from 'src/hooks/governance-data-provider/GovernanceDataProvider';
 import { usePolling } from 'src/hooks/usePolling';
 import { MainLayout } from 'src/layouts/MainLayout';
+import { FormattedProposalTime } from 'src/modules/governance/FormattedProposalTime';
 import { ProposalTopPanel } from 'src/modules/governance/proposal/ProposalTopPanel';
 import { VoteInfo } from 'src/modules/governance/proposal/VoteInfo';
+import { VotersListContainer } from 'src/modules/governance/proposal/VotersListContainer';
 import { StateBadge } from 'src/modules/governance/StateBadge';
 import {
   enhanceProposalWithTimes,
@@ -38,12 +44,8 @@ import { VoteBar } from 'src/modules/governance/VoteBar';
 import { Ipfs, IpfsType } from 'src/static-build/ipfs';
 import { CustomProposalType, Proposal } from 'src/static-build/proposal';
 import { governanceConfig } from 'src/ui-config/governanceConfig';
-import { Link } from 'src/components/primitives/Link';
 
 import { ContentContainer } from '../../../src/components/ContentContainer';
-import { GovVoteModal } from 'src/components/transactions/GovVote/GovVoteModal';
-import { FormattedProposalTime } from 'src/modules/governance/FormattedProposalTime';
-// import { Vote } from 'src/static-build/vote';
 
 export async function getStaticPaths() {
   const ProposalFetcher = new Proposal();
@@ -78,6 +80,7 @@ interface ProposalPageProps {
   ipfs?: IpfsType;
   proposal?: CustomProposalType;
   prerendered?: boolean;
+  metadataError?: boolean;
 }
 
 const CenterAlignedImage = styled('img')({
@@ -85,6 +88,9 @@ const CenterAlignedImage = styled('img')({
   margin: '0 auto',
   maxWidth: '100%',
 });
+
+const formatTime = (timestamp: number): string =>
+  dayjs.unix(timestamp).format('D MMM YYYY, HH:mm UTC Z');
 
 const StyledLink = styled('a')({
   color: 'inherit',
@@ -94,13 +100,13 @@ export default function ProposalPage({
   proposal: initialProposal,
   ipfs,
   prerendered,
+  metadataError = false,
 }: ProposalPageProps) {
   const [url, setUrl] = useState('');
   const [proposal, setProposal] = useState(initialProposal);
   const [loading, setLoading] = useState(!proposal || !isProposalStateImmutable(proposal));
   const { breakpoints } = useTheme();
   const xsmUp = useMediaQuery(breakpoints.up('xsm'));
-
   const mightBeStale = !proposal || !isProposalStateImmutable(proposal);
 
   async function updateProposal() {
@@ -145,106 +151,127 @@ export default function ProposalPage({
         requiredDiff: 0,
         diff: 0,
       };
+
+  const proposalHasExpired: boolean = proposal
+    ? dayjs() > dayjs.unix(proposal.expirationTimestamp)
+    : false;
+
   return (
     <>
-      {ipfs && <Meta title={ipfs.title} description={ipfs.shortDescription} />}
+      {ipfs && (
+        <Meta imageUrl={AaveMetaImage.src} title={ipfs.title} description={ipfs.shortDescription} />
+      )}
       <ProposalTopPanel />
 
       <ContentContainer>
         <Grid container spacing={4}>
           <Grid item xs={12} md={8}>
-            <Paper sx={{ px: 6, pt: 4, pb: 12 }}>
+            <Paper sx={{ px: 6, pt: 4, pb: 12 }} data-cy="vote-info-body">
               <Typography variant="h3">
                 <Trans>Proposal overview</Trans>
               </Typography>
-              <Box sx={{ px: { md: 18 }, pt: 8 }}>
-                <Typography variant="h2" sx={{ mb: 6 }}>
-                  {ipfs?.title || <Skeleton />}
-                </Typography>
-                {proposal && ipfs ? (
-                  <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        flexDirection: 'row',
-                        flexWrap: 'wrap',
-                        alignItems: 'center',
+              {metadataError ? (
+                <Box sx={{ px: { md: 18 }, pt: 8 }}>
+                  <Warning severity="error">
+                    <Trans>An error has occurred fetching the proposal metadata from IPFS.</Trans>
+                  </Warning>
+                </Box>
+              ) : (
+                <Box sx={{ px: { md: 18 }, pt: 8, wordBreak: 'break-word' }}>
+                  <Typography variant="h2" sx={{ mb: 6 }}>
+                    {ipfs?.title || <Skeleton />}
+                  </Typography>
+                  {proposal && ipfs ? (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          flexDirection: 'row',
+                          flexWrap: 'wrap',
+                          alignItems: 'center',
+                        }}
+                      >
+                        <Box sx={{ mr: '24px', mb: { xs: '2px', sm: 0 } }}>
+                          <StateBadge state={proposal.state} loading={loading} />
+                        </Box>
+                        {!loading && (
+                          <FormattedProposalTime
+                            state={proposal.state}
+                            executionTime={proposal.executionTime}
+                            startTimestamp={proposal.startTimestamp}
+                            executionTimeWithGracePeriod={proposal.executionTimeWithGracePeriod}
+                            expirationTimestamp={proposal.expirationTimestamp}
+                          />
+                        )}
+                      </Box>
+                      <Box sx={{ flexGrow: 1 }} />
+                      <Button
+                        component="a"
+                        target="_blank"
+                        rel="noopener"
+                        href={`${governanceConfig.ipfsGateway}/${ipfs.ipfsHash}`}
+                        startIcon={
+                          <SvgIcon sx={{ '& path': { strokeWidth: '1' } }}>
+                            <DownloadIcon />
+                          </SvgIcon>
+                        }
+                      >
+                        {xsmUp && <Trans>Raw-Ipfs</Trans>}
+                      </Button>
+                      <Button
+                        component="a"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(
+                          ipfs.title
+                        )}&url=${url}`}
+                        startIcon={<Twitter />}
+                      >
+                        {xsmUp && <Trans>Share on twitter</Trans>}
+                      </Button>
+                    </Box>
+                  ) : (
+                    <Typography variant="buttonL">
+                      <Skeleton />
+                    </Typography>
+                  )}
+                  {ipfs ? (
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        img({ src, alt }) {
+                          return <CenterAlignedImage src={src} alt={alt} />;
+                        },
+                        a({ node, ...rest }) {
+                          return <StyledLink {...rest} />;
+                        },
+                        h2({ node, ...rest }) {
+                          return (
+                            <Typography
+                              variant="subheader1"
+                              sx={{ mt: 6 }}
+                              gutterBottom
+                              {...rest}
+                            />
+                          );
+                        },
+                        p({ node, ...rest }) {
+                          return <Typography variant="description" {...rest} />;
+                        },
                       }}
                     >
-                      <Box sx={{ mr: '24px', mb: { xs: '2px', sm: 0 } }}>
-                        <StateBadge state={proposal.state} loading={loading} />
-                      </Box>
-                      {!loading && (
-                        <FormattedProposalTime
-                          state={proposal.state}
-                          executionTime={proposal.executionTime}
-                          executionTimeWithGracePeriod={proposal.executionTimeWithGracePeriod}
-                          expirationTimestamp={proposal.expirationTimestamp}
-                        />
-                      )}
-                    </Box>
-                    <Box sx={{ flexGrow: 1 }} />
-                    <Button
-                      component="a"
-                      target="_blank"
-                      rel="noopener"
-                      href={`${governanceConfig.ipfsGateway}/${ipfs.ipfsHash}`}
-                      startIcon={
-                        <SvgIcon sx={{ '& path': { strokeWidth: '1' } }}>
-                          <DownloadIcon />
-                        </SvgIcon>
-                      }
-                    >
-                      {xsmUp && <Trans>Raw-Ipfs</Trans>}
-                    </Button>
-                    <Button
-                      component="a"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(
-                        ipfs.title
-                      )}&url=${url}`}
-                      startIcon={<Twitter />}
-                    >
-                      {xsmUp && <Trans>Share on twitter</Trans>}
-                    </Button>
-                  </Box>
-                ) : (
-                  <Typography variant="buttonL">
-                    <Skeleton />
-                  </Typography>
-                )}
-                {ipfs ? (
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    components={{
-                      img({ src, alt }) {
-                        return <CenterAlignedImage src={src} alt={alt} />;
-                      },
-                      a({ node, ...rest }) {
-                        return <StyledLink {...rest} />;
-                      },
-                      h2({ node, ...rest }) {
-                        return (
-                          <Typography variant="subheader1" sx={{ mt: 6 }} gutterBottom {...rest} />
-                        );
-                      },
-                      p({ node, ...rest }) {
-                        return <Typography variant="description" {...rest} />;
-                      },
-                    }}
-                  >
-                    {ipfs.description}
-                  </ReactMarkdown>
-                ) : (
-                  <>
-                    <Skeleton variant="text" sx={{ my: 4 }} />
-                    <Skeleton variant="rectangular" height={200} sx={{ my: 4 }} />
-                    <Skeleton variant="text" sx={{ my: 4 }} />
-                    <Skeleton variant="rectangular" height={400} sx={{ my: 4 }} />
-                  </>
-                )}
-              </Box>
+                      {ipfs.description}
+                    </ReactMarkdown>
+                  ) : (
+                    <>
+                      <Skeleton variant="text" sx={{ my: 4 }} />
+                      <Skeleton variant="rectangular" height={200} sx={{ my: 4 }} />
+                      <Skeleton variant="text" sx={{ my: 4 }} />
+                      <Skeleton variant="rectangular" height={400} sx={{ my: 4 }} />
+                    </>
+                  )}
+                </Box>
+              )}
             </Paper>
           </Grid>
           <Grid item xs={12} md={4}>
@@ -263,9 +290,10 @@ export default function ProposalPage({
                     loading={loading}
                   />
                   <VoteBar percent={nayPercent} votes={nayVotes} sx={{ mt: 3 }} loading={loading} />
+                  <VotersListContainer proposal={proposal} />
                   <Row
                     caption={<Trans>State</Trans>}
-                    sx={{ height: 48, mt: 10 }}
+                    sx={{ height: 48 }}
                     captionVariant="description"
                   >
                     <Box
@@ -276,9 +304,10 @@ export default function ProposalPage({
                       }}
                     >
                       <StateBadge state={proposal.state} loading={loading} />
-                      <Box sx={{ mt: '2px' }}>
+                      <Box sx={{ mt: 0.5 }}>
                         <FormattedProposalTime
                           state={proposal.state}
+                          startTimestamp={proposal.startTimestamp}
                           executionTime={proposal.executionTime}
                           expirationTimestamp={proposal.expirationTimestamp}
                           executionTimeWithGracePeriod={proposal.executionTimeWithGracePeriod}
@@ -315,12 +344,14 @@ export default function ProposalPage({
                       <FormattedNumber
                         value={yaeVotes}
                         visibleDecimals={2}
+                        roundDown
                         sx={{ display: 'block' }}
                       />
                       <FormattedNumber
                         variant="caption"
                         value={minQuorumVotes}
                         visibleDecimals={2}
+                        roundDown
                         color="text.muted"
                       />
                     </Box>
@@ -351,11 +382,17 @@ export default function ProposalPage({
                     captionVariant="description"
                   >
                     <Box sx={{ textAlign: 'right' }}>
-                      <FormattedNumber value={diff} visibleDecimals={2} sx={{ display: 'block' }} />
+                      <FormattedNumber
+                        value={diff}
+                        visibleDecimals={2}
+                        roundDown
+                        sx={{ display: 'block' }}
+                      />
                       <FormattedNumber
                         variant="caption"
                         value={requiredDiff}
                         visibleDecimals={2}
+                        roundDown
                         color="text.muted"
                       />
                     </Box>
@@ -398,9 +435,7 @@ export default function ProposalPage({
                     captionVariant="description"
                   >
                     <Box sx={{ textAlign: 'right' }}>
-                      <Typography>
-                        ~ {dayjs.unix(proposal.creationTimestamp).format('DD MMM YYYY, hh:mm a')}
-                      </Typography>
+                      <Typography>{formatTime(proposal.creationTimestamp)}</Typography>
                       <Typography variant="caption" color="text.muted">
                         {proposal.proposalCreated}
                       </Typography>
@@ -419,23 +454,60 @@ export default function ProposalPage({
                     captionVariant="description"
                   >
                     <Box sx={{ textAlign: 'right' }}>
-                      <Typography>
-                        ~ {dayjs.unix(proposal.startTimestamp).format('DD MMM YYYY, hh:mm a')}
-                      </Typography>
+                      <Typography>{formatTime(proposal.startTimestamp)}</Typography>
                       <Typography variant="caption" color="text.muted">
                         {proposal.startBlock}
                       </Typography>
                     </Box>
                   </Row>
+                  {proposalHasExpired ? (
+                    <Row
+                      caption={
+                        <>
+                          <Trans>Ended</Trans>
+                          <Typography variant="caption" color="text.muted">
+                            Block
+                          </Typography>
+                        </>
+                      }
+                      sx={{ height: 48 }}
+                      captionVariant="description"
+                    >
+                      <Box sx={{ textAlign: 'right' }}>
+                        <Typography>{formatTime(proposal.expirationTimestamp)}</Typography>
+                        <Typography variant="caption" color="text.muted">
+                          {proposal.endBlock}
+                        </Typography>
+                      </Box>
+                    </Row>
+                  ) : (
+                    <Row
+                      caption={
+                        <>
+                          <Trans>Ends</Trans>
+                          <Typography variant="caption" color="text.muted">
+                            Block
+                          </Typography>
+                        </>
+                      }
+                      sx={{ height: 48 }}
+                      captionVariant="description"
+                    >
+                      <Box sx={{ textAlign: 'right' }}>
+                        <Typography>{formatTime(proposal.expirationTimestamp)}</Typography>
+                        <Typography variant="caption" color="text.muted">
+                          {proposal.endBlock}
+                        </Typography>
+                      </Box>
+                    </Row>
+                  )}
                   {proposal.executed && (
                     <Row
                       caption={<Trans>Executed</Trans>}
                       sx={{ height: 48 }}
                       captionVariant="description"
                     >
-                      <Typography>
-                        {dayjs.unix(proposal.executionTime).format('DD MMM YYYY, hh:mm a')}
-                      </Typography>
+                      <Typography>{formatTime(proposal.executionTime)}</Typography>
                     </Row>
                   )}
                   {ipfs?.author && (
@@ -504,10 +576,9 @@ export default function ProposalPage({
 ProposalPage.getLayout = function getLayout(page: React.ReactElement) {
   return (
     <MainLayout>
-      <GovernanceDataProvider>
-        {page}
-        <GovVoteModal />
-      </GovernanceDataProvider>
+      <GovernanceDataProvider />
+      {page}
+      <GovVoteModal />
     </MainLayout>
   );
 };

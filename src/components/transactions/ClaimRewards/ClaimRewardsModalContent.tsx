@@ -1,3 +1,4 @@
+import { ChainId } from '@aave/contract-helpers';
 import { normalize, UserIncentiveData } from '@aave/math-utils';
 import { Trans } from '@lingui/macro';
 import { Box, Typography } from '@mui/material';
@@ -32,8 +33,8 @@ export enum ErrorType {
 export const ClaimRewardsModalContent = () => {
   const { gasLimit, mainTxState: claimRewardsTxState, txError } = useModalContext();
   const { user, reserves } = useAppDataContext();
-  const { currentChainId, currentMarketData, currentMarket } = useProtocolDataContext();
-  const { chainId: connectedChainId } = useWeb3Context();
+  const { currentChainId, currentMarketData } = useProtocolDataContext();
+  const { chainId: connectedChainId, watchModeOnlyAddress } = useWeb3Context();
   const [claimableUsd, setClaimableUsd] = useState('0');
   const [selectedRewardSymbol, setSelectedRewardSymbol] = useState<string>('all');
   const [rewards, setRewards] = useState<Reward[]>([]);
@@ -53,7 +54,7 @@ export const ClaimRewardsModalContent = () => {
       let tokenPrice = 0;
       // getting price from reserves for the native rewards for v2 markets
       if (!currentMarketData.v3 && Number(rewardBalance) > 0) {
-        if (currentMarket === 'proto_mainnet') {
+        if (currentMarketData.chainId === ChainId.mainnet) {
           const aave = reserves.find((reserve) => reserve.symbol === 'AAVE');
           tokenPrice = aave ? Number(aave.priceInUSD) : 0;
         } else {
@@ -140,7 +141,7 @@ export const ClaimRewardsModalContent = () => {
   return (
     <>
       <TxModalTitle title="Claim rewards" />
-      {isWrongNetwork && (
+      {isWrongNetwork && !watchModeOnlyAddress && (
         <ChangeNetworkWarning networkName={networkConfig.name} chainId={currentChainId} />
       )}
 

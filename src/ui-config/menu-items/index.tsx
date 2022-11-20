@@ -1,13 +1,13 @@
-import { BookOpenIcon, QuestionMarkCircleIcon } from '@heroicons/react/outline';
+import { BookOpenIcon, CreditCardIcon, QuestionMarkCircleIcon } from '@heroicons/react/outline';
 import { t } from '@lingui/macro';
 import { ReactNode } from 'react';
 import { ROUTES } from 'src/components/primitives/Link';
+import { ENABLE_TESTNET } from 'src/utils/marketsAndNetworksConfig';
 
 import DiscordIcon from '/public/icons/discord.svg';
 import GithubIcon from '/public/icons/github.svg';
 
 import { MarketDataType } from '../marketsConfig';
-import { ENABLE_TESTNET } from 'src/utils/marketsAndNetworksConfig';
 
 interface Navigation {
   link: string;
@@ -54,6 +54,7 @@ export const navigation: Navigation[] = [
 
 interface MoreMenuItem extends Navigation {
   icon: ReactNode;
+  makeLink?: (walletAddress: string) => string;
 }
 
 const moreMenuItems: MoreMenuItem[] = [
@@ -76,6 +77,13 @@ const moreMenuItems: MoreMenuItem[] = [
     link: 'https://github.com/aave/interface',
     title: t`Github`,
     icon: <GithubIcon />,
+  },
+  {
+    link: 'https://global.transak.com',
+    makeLink: (walletAddress) =>
+      `${process.env.NEXT_PUBLIC_TRANSAK_APP_URL}/?apiKey=${process.env.NEXT_PUBLIC_TRANSAK_API_KEY}&walletAddress=${walletAddress}&disableWalletAddressForm=true`,
+    title: t`Buy Crypto With Fiat`,
+    icon: <CreditCardIcon />,
   },
 ];
 

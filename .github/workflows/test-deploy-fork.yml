@@ -6,8 +6,8 @@ concurrency:
 
 on:
   workflow_run:
-    workflows: ["Build PR From Fork"]
-    types: ["completed"]
+    workflows: ['Build PR From Fork']
+    types: ['completed']
 
 jobs:
   prepare_jobs:
@@ -19,10 +19,10 @@ jobs:
       pr_number: '${{ steps.get_pr_number.outputs.pr_number }}'
     steps:
       - name: Download PR info
-        uses: dawidd6/action-download-artifact@ea71f332a90fd52416b1629b933dcf7e0ccd421d # v2.22.0
+        uses: dawidd6/action-download-artifact@7847792dd435a50521b8e3bd3576dae7459d1fa8 # v2.22.0
         with:
           workflow: build-fork.yml
-          run_id: "${{ github.event.workflow_run.id }}"
+          run_id: '${{ github.event.workflow_run.id }}'
           workflow_conclusion: success
           name: pr
           path: ./
@@ -34,7 +34,7 @@ jobs:
           echo "::set-output name=pr_number::$(cat NUM | tr -dc '[:digit:]')"
 
       - name: Link this CI run to PR
-        uses: actions/github-script@d50f485531ba88479582bc2da03ff424389af5c1 # v6.1.1
+        uses: actions/github-script@100527700e8b29ca817ac0e0dfbfc5e8ff38edda # v6.1.1
         with:
           script: |
             await github.rest.issues.createComment({
@@ -46,7 +46,7 @@ jobs:
 
   next_js_analyze:
     runs-on: ubuntu-latest
-    needs: ["prepare_jobs"]
+    needs: ['prepare_jobs']
     env:
       PR_NUMBER: ${{ needs.prepare_jobs.outputs.pr_number }}
     steps:
@@ -56,11 +56,11 @@ jobs:
 
       - uses: ./.github/actions/analyze-comment
         with:
-          PULL_REQUEST_NUMBER: "${{ env.PR_NUMBER }}"
+          PULL_REQUEST_NUMBER: '${{ env.PR_NUMBER }}'
 
   cypress_smoke_v2:
     runs-on: ubuntu-latest
-    needs: ["prepare_jobs"]
+    needs: ['prepare_jobs']
     strategy:
       fail-fast: false
       matrix:
@@ -82,12 +82,11 @@ jobs:
 
   cypress_smoke_v3:
     runs-on: ubuntu-latest
-    needs: ["prepare_jobs"]
+    needs: ['prepare_jobs']
     strategy:
       fail-fast: false
       matrix:
         market:
-          - fantom
           - polygon
           - avalanche
           - optimism
@@ -116,7 +115,7 @@ jobs:
           persist-credentials: false
 
       - name: Download static build
-        uses: dawidd6/action-download-artifact@ea71f332a90fd52416b1629b933dcf7e0ccd421d # v2.22.0
+        uses: dawidd6/action-download-artifact@7847792dd435a50521b8e3bd3576dae7459d1fa8 # v2.22.0
         with:
           workflow: build-fork.yml
           run_id: ${{ github.event.workflow_run.id }}
@@ -126,7 +125,7 @@ jobs:
 
       - name: pinata
         id: pinata
-        uses: aave/pinata-action@b03be403ea86f79077ea9cc0b835c3295faa12dd
+        uses: aave/pinata-action@a3409e26f4cb859a2d9984109317caac53db5f68
         with:
           PINATA_API_KEY: '${{ secrets.PINATA_API_KEY }}'
           PINATA_SECRET_KEY: '${{ secrets.PINATA_SECRET_KEY }}'
@@ -135,7 +134,7 @@ jobs:
           CID_VERSION: 1
 
       - name: 'Comment on PR'
-        uses: actions/github-script@d50f485531ba88479582bc2da03ff424389af5c1 # v6.1.1
+        uses: actions/github-script@100527700e8b29ca817ac0e0dfbfc5e8ff38edda # v6.1.1
         with:
           script: |
             await github.rest.issues.createComment({
@@ -147,7 +146,7 @@ jobs:
 
   cypress_full_v2:
     runs-on: ubuntu-latest
-    needs: ["deploy_fork"]
+    needs: ['deploy_fork']
     strategy:
       fail-fast: false
       matrix:
@@ -169,12 +168,11 @@ jobs:
 
   cypress_full_v3:
     runs-on: ubuntu-latest
-    needs: ["deploy_fork"]
+    needs: ['deploy_fork']
     strategy:
       fail-fast: false
       matrix:
         market:
-          - fantom
           - polygon
           - avalanche
           - optimism
@@ -191,7 +189,7 @@ jobs:
 
   cypress_additional_v2:
     runs-on: ubuntu-latest
-    needs: ["deploy_fork"]
+    needs: ['deploy_fork']
     strategy:
       fail-fast: false
       matrix:
@@ -212,12 +210,11 @@ jobs:
 
   cypress_additional_v3:
     runs-on: ubuntu-latest
-    needs: ["deploy_fork"]
+    needs: ['deploy_fork']
     strategy:
       fail-fast: false
       matrix:
         market:
-          - fantom
           - polygon
           - avalanche
           - optimism
@@ -234,12 +231,13 @@ jobs:
 
   cypress_app_functionality:
     runs-on: ubuntu-latest
-    needs: ["deploy_fork"]
+    needs: ['deploy_fork']
     strategy:
       fail-fast: false
       matrix:
         scoupe:
           - settings
+          - mobile
     steps:
       - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v3.0.2
 
@@ -250,7 +248,6 @@ jobs:
           CYPRESS_TENDERLY_KEY: ${{ secrets.TENDERLY_KEY }}
           CYPRESS_TENDERLY_PROJECT: ${{ secrets.TENDERLY_PROJECT }}
           YARN_TEST_COMMAND: npx cypress-repeat run -n 2 --rerun-failed-only --config-file ./cypress/configs/${{ matrix.scoupe }}.config.ts
-
 
   notify_failure:
     runs-on: ubuntu-latest
@@ -274,6 +271,14 @@ jobs:
             ❌ CI run has failed!
             Please see logs at ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}'
 
+      - name: Label
+        uses: ./.github/actions/fork-result-label
+        continue-on-error: true
+        with:
+          SUCCESS: 'false'
+          PULL_REQUEST_NUMBER: ${{ env.PR_NUMBER }}
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   notify_success:
     runs-on: ubuntu-latest
     if: success()
@@ -293,5 +298,13 @@ jobs:
         with:
           PULL_REQUEST_NUMBER: '${{ env.PR_NUMBER }}'
           COMMENT_BODY: |
-              ✅ CI run has succeded!
-              You can find tests and deployment logs at ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}'
+            ✅ CI run has succeded!
+            You can find tests and deployment logs at ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}'
+
+      - name: Label
+        uses: ./.github/actions/fork-result-label
+        continue-on-error: true
+        with:
+          SUCCESS: 'true'
+          PULL_REQUEST_NUMBER: ${{ env.PR_NUMBER }}
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}

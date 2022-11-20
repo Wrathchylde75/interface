@@ -8,12 +8,16 @@ import { Trans } from '@lingui/macro';
 import { Typography } from '@mui/material';
 import BigNumber from 'bignumber.js';
 import React, { useRef, useState } from 'react';
+import { Warning } from 'src/components/primitives/Warning';
+import { AMPLWarning } from 'src/components/Warnings/AMPLWarning';
 import { CollateralType } from 'src/helpers/types';
+import { useAssetCaps } from 'src/hooks/useAssetCaps';
 import { useModalContext } from 'src/hooks/useModal';
 import { useProtocolDataContext } from 'src/hooks/useProtocolDataContext';
 import { ERC20TokenType } from 'src/libs/web3-data-provider/Web3Provider';
 import { getMaxAmountAvailableToSupply } from 'src/utils/getMaxAmountAvailableToSupply';
 import { isFeatureEnabled } from 'src/utils/marketsAndNetworksConfig';
+
 import { useAppDataContext } from '../../../hooks/app-data-provider/useAppDataProvider';
 import { CapType } from '../../caps/helper';
 import { AssetInput } from '../AssetInput';
@@ -28,12 +32,9 @@ import {
   TxModalDetails,
 } from '../FlowCommons/TxModalDetails';
 import { AAVEWarning } from '../Warnings/AAVEWarning';
-import { AMPLWarning } from '../Warnings/AMPLWarning';
-import { HarmonyWarning } from '../Warnings/HarmonyWarning';
 import { IsolationModeWarning } from '../Warnings/IsolationModeWarning';
 import { SNXWarning } from '../Warnings/SNXWarning';
 import { SupplyActions } from './SupplyActions';
-import { useAssetCaps } from 'src/hooks/useAssetCaps';
 
 export enum ErrorType {
   CAP_REACHED,
@@ -212,12 +213,15 @@ export const SupplyModalContent = ({
       {showIsolationWarning && <IsolationModeWarning asset={poolReserve.symbol} />}
       {supplyCap.determineWarningDisplay({ supplyCap })}
       {debtCeiling.determineWarningDisplay({ debtCeiling })}
-      {poolReserve.symbol === 'AMPL' && <AMPLWarning />}
+      {poolReserve.symbol === 'AMPL' && (
+        <Warning sx={{ mt: '16px', mb: '40px' }} severity="warning">
+          <AMPLWarning />
+        </Warning>
+      )}
       {process.env.NEXT_PUBLIC_ENABLE_STAKING === 'true' &&
         poolReserve.symbol === 'AAVE' &&
         isFeatureEnabled.staking(currentMarketData) && <AAVEWarning />}
       {poolReserve.symbol === 'SNX' && !maxAmountToSupply.eq('0') && <SNXWarning />}
-      {currentNetworkConfig.name === 'Harmony' && <HarmonyWarning learnMore={true} />}
 
       <AssetInput
         value={amount}

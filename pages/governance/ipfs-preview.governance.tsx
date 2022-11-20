@@ -6,6 +6,7 @@ import { MainLayout } from 'src/layouts/MainLayout';
 import { getProposalMetadata } from 'src/modules/governance/utils/getProposalMetadata';
 import { IpfsType } from 'src/static-build/ipfs';
 import { governanceConfig } from 'src/ui-config/governanceConfig';
+
 import ProposalPage from './proposal/[proposalId].governance';
 
 export default function IpfsPreview() {
@@ -14,10 +15,11 @@ export default function IpfsPreview() {
   const [ipfs, setIpfs] = useState<IpfsType>();
 
   async function fetchIpfs() {
+    const proposalMetadata = await getProposalMetadata(ipfsHash, governanceConfig.ipfsGateway);
     const newIpfs = {
       id: -1,
       originalHash: ipfsHash,
-      ...(await getProposalMetadata(ipfsHash, governanceConfig?.ipfsGateway)),
+      ...proposalMetadata,
     };
     setIpfs(newIpfs);
   }
@@ -32,10 +34,9 @@ export default function IpfsPreview() {
 IpfsPreview.getLayout = function getLayout(page: React.ReactElement) {
   return (
     <MainLayout>
-      <GovernanceDataProvider>
-        {page}
-        <GovVoteModal />
-      </GovernanceDataProvider>
+      <GovernanceDataProvider />
+      {page}
+      <GovVoteModal />
     </MainLayout>
   );
 };

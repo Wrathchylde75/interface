@@ -1,22 +1,23 @@
-import React, { useRef, useState } from 'react';
-import { Typography } from '@mui/material';
-import { AssetInput } from '../AssetInput';
 import { normalize, valueToBigNumber } from '@aave/math-utils';
-import { getNetworkConfig } from 'src/utils/marketsAndNetworksConfig';
-import { TxErrorView } from '../FlowCommons/Error';
-import { TxSuccessView } from '../FlowCommons/Success';
-import { ChangeNetworkWarning } from '../Warnings/ChangeNetworkWarning';
-import { TxModalTitle } from '../FlowCommons/TxModalTitle';
-import { GasEstimationError } from '../FlowCommons/GasEstimationError';
 import { Trans } from '@lingui/macro';
-import { useWeb3Context } from 'src/libs/hooks/useWeb3Context';
-import { useStakeData } from 'src/hooks/stake-data-provider/StakeDataProvider';
-import { stakeConfig } from 'src/ui-config/stakeConfig';
-import { UnStakeActions } from './UnStakeActions';
-import { GasStation } from '../GasStation/GasStation';
+import { Typography } from '@mui/material';
 import { parseUnits } from 'ethers/lib/utils';
+import React, { useRef, useState } from 'react';
 import { useModalContext } from 'src/hooks/useModal';
 import { useProtocolDataContext } from 'src/hooks/useProtocolDataContext';
+import { useWeb3Context } from 'src/libs/hooks/useWeb3Context';
+import { useRootStore } from 'src/store/root';
+import { stakeConfig } from 'src/ui-config/stakeConfig';
+import { getNetworkConfig } from 'src/utils/marketsAndNetworksConfig';
+
+import { AssetInput } from '../AssetInput';
+import { TxErrorView } from '../FlowCommons/Error';
+import { GasEstimationError } from '../FlowCommons/GasEstimationError';
+import { TxSuccessView } from '../FlowCommons/Success';
+import { TxModalTitle } from '../FlowCommons/TxModalTitle';
+import { GasStation } from '../GasStation/GasStation';
+import { ChangeNetworkWarning } from '../Warnings/ChangeNetworkWarning';
+import { UnStakeActions } from './UnStakeActions';
 
 export type UnStakeProps = {
   stakeAssetName: string;
@@ -30,9 +31,12 @@ export enum ErrorType {
 type StakingType = 'aave' | 'bpt';
 
 export const UnStakeModalContent = ({ stakeAssetName, icon }: UnStakeProps) => {
-  const data = useStakeData();
-  const stakeData = data.stakeGeneralResult?.stakeGeneralUIData[stakeAssetName as StakingType];
-  const { chainId: connectedChainId } = useWeb3Context();
+  const [stakeGeneralResult, stakeUserResult] = useRootStore((state) => [
+    state.stakeGeneralResult,
+    state.stakeUserResult,
+  ]);
+  const stakeData = stakeGeneralResult?.[stakeAssetName as StakingType];
+  const { chainId: connectedChainId, watchModeOnlyAddress } = useWeb3Context();
   const { gasLimit, mainTxState: txState, txError } = useModalContext();
   const { currentNetworkConfig, currentChainId } = useProtocolDataContext();
 
@@ -41,8 +45,7 @@ export const UnStakeModalContent = ({ stakeAssetName, icon }: UnStakeProps) => {
   const amountRef = useRef<string>();
 
   const walletBalance = normalize(
-    data.stakeUserResult?.stakeUserUIData[stakeAssetName as StakingType].stakeTokenUserBalance ||
-      '0',
+    stakeUserResult?.[stakeAssetName as StakingType].stakeTokenUserBalance || '0',
     18
   );
 
@@ -59,7 +62,7 @@ export const UnStakeModalContent = ({ stakeAssetName, icon }: UnStakeProps) => {
   const amountInUsd =
     Number(amount) *
     (Number(normalize(stakeData?.stakeTokenPriceEth || 1, 18)) /
-      Number(normalize(data.stakeGeneralResult?.stakeGeneralUIData.usdPriceEth || 1, 18)));
+      Number(normalize(stakeGeneralResult?.usdPriceEth || 1, 18)));
 
   // error handler
   let blockingError: ErrorType | undefined = undefined;
@@ -90,13 +93,13 @@ export const UnStakeModalContent = ({ stakeAssetName, icon }: UnStakeProps) => {
   }
   if (txState.success)
     return (
-      <TxSuccessView action={<Trans>Staked</Trans>} amount={amountRef.current} symbol={icon} />
+      <TxSuccessView action={<Trans>Unstaked</Trans>} amount={amountRef.current} symbol={icon} />
     );
 
   return (
     <>
       <TxModalTitle title="Unstake" symbol={icon} />
-      {isWrongNetwork && (
+      {isWrongNetwork && !watchModeOnlyAddress && (
         <ChangeNetworkWarning networkName={networkConfig.name} chainId={stakingChain} />
       )}
       <AssetInput

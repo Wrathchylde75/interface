@@ -8,17 +8,21 @@ import {
 } from '@aave/math-utils';
 import BigNumber from 'bignumber.js';
 import React, { useContext } from 'react';
+import { EmodeCategory } from 'src/helpers/types';
 import { useWeb3Context } from 'src/libs/hooks/useWeb3Context';
-import { fetchIconSymbolAndName, STABLE_ASSETS } from 'src/ui-config/reservePatches';
+import { useRootStore } from 'src/store/root';
+import { fetchIconSymbolAndName } from 'src/ui-config/reservePatches';
 
+import {
+  reserveSortFn,
+  selectCurrentBaseCurrencyData,
+  selectCurrentReserves,
+  selectCurrentUserEmodeCategoryId,
+  selectCurrentUserReserves,
+  selectEmodes,
+} from '../../store/poolSelectors';
 import { useCurrentTimestamp } from '../useCurrentTimestamp';
 import { useProtocolDataContext } from '../useProtocolDataContext';
-import {
-  useC_ProtocolDataQuery,
-  useC_ReservesIncentivesQuery,
-  useC_UserDataQuery,
-  useC_UserIncentivesQuery,
-} from './graphql/hooks';
 
 /**
  * removes the marketPrefix from a symbol
@@ -49,6 +53,7 @@ export type ExtendedFormattedUser = FormatUserSummaryAndIncentivesResponse<Compu
 export interface AppDataContextType {
   loading: boolean;
   reserves: ComputedReserveData[];
+  eModes: Record<number, EmodeCategory>;
   // refreshPoolData?: () => Promise<void[]>;
   isUserHasDeposits: boolean;
   user: ExtendedFormattedUser;
@@ -67,56 +72,33 @@ const AppDataContext = React.createContext<AppDataContextType>({} as AppDataCont
  * It fetches reserves /incentives & walletbalances & keeps them updated.
  */
 export const AppDataProvider: React.FC = ({ children }) => {
-  const currentTimestamp = useCurrentTimestamp(1);
+  const currentTimestamp = useCurrentTimestamp(5);
   const { currentAccount } = useWeb3Context();
-  const { currentMarketData, currentChainId, currentNetworkConfig } = useProtocolDataContext();
-
-  const { data: reservesData } = useC_ProtocolDataQuery({
-    variables: {
-      lendingPoolAddressProvider: currentMarketData.addresses.LENDING_POOL_ADDRESS_PROVIDER,
-      chainId: currentChainId,
-    },
-    fetchPolicy: 'cache-only',
-  });
-
-  const { data: userReservesData } = useC_UserDataQuery({
-    variables: {
-      lendingPoolAddressProvider: currentMarketData.addresses.LENDING_POOL_ADDRESS_PROVIDER,
-      userAddress: currentAccount,
-      chainId: currentChainId,
-    },
-    fetchPolicy: 'cache-only',
-  });
-
-  const reserves: ReserveDataHumanized[] = reservesData?.protocolData.reserves || [];
-  const baseCurrencyData = reservesData?.protocolData.baseCurrencyData || {
-    marketReferenceCurrencyDecimals: 0,
-    marketReferenceCurrencyPriceInUsd: '0',
-    networkBaseTokenPriceInUsd: '0',
-    networkBaseTokenPriceDecimals: 0,
-  };
-  const { data: reservesIncentivesData } = useC_ReservesIncentivesQuery({
-    variables: {
-      lendingPoolAddressProvider: currentMarketData.addresses.LENDING_POOL_ADDRESS_PROVIDER,
-      chainId: currentChainId,
-    },
-    fetchPolicy: 'cache-only',
-  });
-  const { data: userReservesIncentivesData } = useC_UserIncentivesQuery({
-    variables: {
-      lendingPoolAddressProvider: currentMarketData.addresses.LENDING_POOL_ADDRESS_PROVIDER,
-      userAddress: currentAccount,
-      chainId: currentChainId,
-    },
-    fetchPolicy: 'cache-only',
-  });
+  const { currentNetworkConfig } = useProtocolDataContext();
+  const [
+    reserves,
+    baseCurrencyData,
+    userReserves,
+    userEmodeCategoryId,
+    reserveIncentiveData,
+    userIncentiveData,
+    eModes,
+  ] = useRootStore((state) => [
+    selectCurrentReserves(state),
+    selectCurrentBaseCurrencyData(state),
+    selectCurrentUserReserves(state),
+    selectCurrentUserEmodeCategoryId(state),
+    state.reserveIncentiveData,
+    state.userIncentiveData,
+    selectEmodes(state),
+  ]);
 
   const formattedPoolReserves = formatReservesAndIncentives({
     reserves,
     currentTimestamp,
     marketReferenceCurrencyDecimals: baseCurrencyData.marketReferenceCurrencyDecimals,
     marketReferencePriceInUsd: baseCurrencyData.marketReferenceCurrencyPriceInUsd,
-    reserveIncentives: reservesIncentivesData?.reservesIncentives || [],
+    reserveIncentives: reserveIncentiveData || [],
   })
     .map((r) => ({
       ...r,
@@ -127,10 +109,6 @@ export const AppDataProvider: React.FC = ({ children }) => {
     }))
     .sort(reserveSortFn);
 
-  const userReserves: UserReserveData[] = userReservesData?.userData.userReserves || [];
-
-  const userEmodeCategoryId = userReservesData?.userData.userEmodeCategoryId || 0;
-
   const user = formatUserSummaryAndIncentives({
     currentTimestamp,
     marketReferencePriceInUsd: baseCurrencyData.marketReferenceCurrencyPriceInUsd,
@@ -138,8 +116,8 @@ export const AppDataProvider: React.FC = ({ children }) => {
     userReserves,
     formattedReserves: formattedPoolReserves,
     userEmodeCategoryId: userEmodeCategoryId,
-    reserveIncentives: reservesIncentivesData?.reservesIncentives || [],
-    userIncentives: userReservesIncentivesData?.userIncentives || [],
+    reserveIncentives: reserveIncentiveData || [],
+    userIncentives: userIncentiveData || [],
   });
 
   const proportions = user.userReservesData.reduce(
@@ -212,10 +190,9 @@ export const AppDataProvider: React.FC = ({ children }) => {
   return (
     <AppDataContext.Provider
       value={{
-        loading:
-          !reserves.length ||
-          (!!currentAccount && userReservesData?.userData.userReserves === undefined),
+        loading: !reserves.length || (!!currentAccount && userReserves === undefined),
         reserves: formattedPoolReserves,
+        eModes,
         user: {
           ...user,
           userEmodeCategoryId,
@@ -239,11 +216,3 @@ export const AppDataProvider: React.FC = ({ children }) => {
 };
 
 export const useAppDataContext = () => useContext(AppDataContext);
-
-const reserveSortFn = (a: { iconSymbol: string }, b: { iconSymbol: string }) => {
-  const aIsStable = STABLE_ASSETS.includes(a.iconSymbol.toUpperCase());
-  const bIsStable = STABLE_ASSETS.includes(b.iconSymbol.toUpperCase());
-  if (aIsStable && !bIsStable) return -1;
-  if (!aIsStable && bIsStable) return 1;
-  return a.iconSymbol.toUpperCase() > b.iconSymbol.toUpperCase() ? 1 : -1;
-};

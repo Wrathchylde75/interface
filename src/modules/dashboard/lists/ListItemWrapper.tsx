@@ -1,13 +1,14 @@
 import { Tooltip, Typography } from '@mui/material';
 import { ReactNode } from 'react';
+import { useAssetCaps } from 'src/hooks/useAssetCaps';
 import { CustomMarket } from 'src/ui-config/marketsConfig';
-import { AMPLWarning } from '../../../components/infoTooltips/AMPLWarning';
-import { FrozenWarning } from '../../../components/infoTooltips/FrozenWarning';
+
+import { AMPLToolTip } from '../../../components/infoTooltips/AMPLToolTip';
+import { FrozenTooltip } from '../../../components/infoTooltips/FrozenTooltip';
 import { ListColumn } from '../../../components/lists/ListColumn';
 import { ListItem } from '../../../components/lists/ListItem';
 import { Link, ROUTES } from '../../../components/primitives/Link';
 import { TokenIcon } from '../../../components/primitives/TokenIcon';
-import { useAssetCaps } from 'src/hooks/useAssetCaps';
 
 interface ListItemWrapperProps {
   symbol: string;
@@ -52,8 +53,8 @@ export const ListItemWrapper = ({
             </Typography>
           </Tooltip>
         </Link>
-        {frozen && <FrozenWarning symbol={symbol} />}
-        {!frozen && symbol === 'AMPL' && <AMPLWarning />}
+        {frozen && <FrozenTooltip symbol={symbol} currentMarket={currentMarket} />}
+        {!frozen && symbol === 'AMPL' && <AMPLToolTip />}
         {showSupplyCapTooltips && supplyCap.displayMaxedTooltip({ supplyCap })}
         {showBorrowCapTooltips && borrowCap.displayMaxedTooltip({ borrowCap })}
         {showDebtCeilingTooltips && debtCeiling.displayMaxedTooltip({ debtCeiling })}
