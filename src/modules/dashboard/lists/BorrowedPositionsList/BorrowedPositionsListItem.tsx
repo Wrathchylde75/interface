@@ -41,6 +41,7 @@ export const BorrowedPositionsListItem = ({
       detailsAddress={reserve.underlyingAsset}
       currentMarket={currentMarket}
       frozen={reserve.isFrozen}
+      borrowEnabled={reserve.borrowingEnabled}
       data-cy={`dashboardBorrowedListItem_${reserve.symbol.toUpperCase()}_${borrowRateMode}`}
       showBorrowCapTooltips
     >
@@ -77,7 +78,7 @@ export const BorrowedPositionsListItem = ({
         <Button
           disabled={!isActive}
           variant="contained"
-          onClick={() => openRepay(reserve.underlyingAsset, borrowRateMode)}
+          onClick={() => openRepay(reserve.underlyingAsset, borrowRateMode, isFrozen)}
         >
           <Trans>Repay</Trans>
         </Button>
