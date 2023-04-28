@@ -2,6 +2,7 @@ import { Trans } from '@lingui/macro';
 import { Box, Button } from '@mui/material';
 import { useAssetCaps } from 'src/hooks/useAssetCaps';
 import { useProtocolDataContext } from 'src/hooks/useProtocolDataContext';
+import { DashboardReserve } from 'src/utils/dashboardSortUtils';
 
 import { CapsHint } from '../../../../components/caps/CapsHint';
 import { CapType } from '../../../../components/caps/helper';
@@ -12,7 +13,6 @@ import { useModalContext } from '../../../../hooks/useModal';
 import { ListItemCanBeCollateral } from '../ListItemCanBeCollateral';
 import { ListMobileItemWrapper } from '../ListMobileItemWrapper';
 import { ListValueRow } from '../ListValueRow';
-import { SupplyAssetsItem } from './types';
 
 export const SupplyAssetsListMobileItem = ({
   symbol,
@@ -30,13 +30,13 @@ export const SupplyAssetsListMobileItem = ({
   isFreezed,
   underlyingAsset,
   detailsAddress,
-}: SupplyAssetsItem) => {
+}: DashboardReserve) => {
   const { currentMarket } = useProtocolDataContext();
   const { openSupply } = useModalContext();
 
-  // Hide the asset to prevent it from being supplied if supply cap has been reached
+  // Disable the asset to prevent it from being supplied if supply cap has been reached
   const { supplyCap: supplyCapUsage } = useAssetCaps();
-  if (supplyCapUsage.isMaxed) return null;
+  const isMaxCapReached = supplyCapUsage.isMaxed;
 
   return (
     <ListMobileItemWrapper
@@ -51,7 +51,7 @@ export const SupplyAssetsListMobileItem = ({
         title={<Trans>Supply balance</Trans>}
         value={Number(walletBalance)}
         subValue={walletBalanceUSD}
-        disabled={Number(walletBalance) === 0}
+        disabled={Number(walletBalance) === 0 || isMaxCapReached}
         capsComponent={
           <CapsHint
             capType={CapType.supplyCap}
@@ -90,7 +90,7 @@ export const SupplyAssetsListMobileItem = ({
 
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 5 }}>
         <Button
-          disabled={!isActive || isFreezed || Number(walletBalance) <= 0}
+          disabled={!isActive || isFreezed || Number(walletBalance) <= 0 || isMaxCapReached}
           variant="contained"
           onClick={() => openSupply(underlyingAsset)}
           sx={{ mr: 1.5 }}

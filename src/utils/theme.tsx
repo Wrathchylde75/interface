@@ -39,6 +39,9 @@ declare module '@mui/material/styles/createPalette' {
       aaveGradient: string;
       newGradient: string;
     };
+    other: {
+      standardInputLine: string;
+    };
   }
 
   interface PaletteOptions {
@@ -126,7 +129,7 @@ export const getDesignTokens = (mode: 'light' | 'dark') => {
   return {
     breakpoints: {
       keys: ['xs', 'xsm', 'sm', 'md', 'lg', 'xl', 'xxl'],
-      values: { xs: 0, xsm: 640, sm: 760, md: 960, lg: 1280, xl: 1440, xxl: 1800 },
+      values: { xs: 0, xsm: 640, sm: 760, md: 960, lg: 1280, xl: 1575, xxl: 1800 },
     },
     palette: {
       mode,
@@ -189,6 +192,9 @@ export const getDesignTokens = (mode: 'light' | 'dark') => {
         disabled: getColor('#BBBECA', '#EBEBEF4D'),
         disabledBackground: getColor('#EAEBEF', '#EBEBEF1F'),
         focus: getColor('#F1F1F3', '#EBEBEF1F'),
+      },
+      other: {
+        standardInputLine: getColor('#383D511F', '#EBEBEF6B'),
       },
       gradients: {
         aaveGradient: 'linear-gradient(248.86deg, #B6509E 10.51%, #2EBAC6 93.41%)',

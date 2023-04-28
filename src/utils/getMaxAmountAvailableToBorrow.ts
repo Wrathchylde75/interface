@@ -1,11 +1,25 @@
 import { InterestRate } from '@aave/contract-helpers';
 import { FormatUserSummaryAndIncentivesResponse, valueToBigNumber } from '@aave/math-utils';
 import BigNumber from 'bignumber.js';
+import { ethers } from 'ethers';
 
 import {
   ComputedReserveData,
   ExtendedFormattedUser,
 } from '../hooks/app-data-provider/useAppDataProvider';
+import { roundToTokenDecimals } from './utils';
+
+// Subset of ComputedReserveData
+interface PoolReserveBorrowSubset {
+  borrowCap: string;
+  availableLiquidityUSD: string;
+  totalDebt: string;
+  isFrozen: boolean;
+  decimals: number;
+  formattedAvailableLiquidity: string;
+  formattedPriceInMarketReferenceCurrency: string;
+  borrowCapUSD: string;
+}
 
 /**
  * Calculates the maximum amount a user can borrow.
@@ -14,18 +28,29 @@ import {
  * @param user
  */
 export function getMaxAmountAvailableToBorrow(
-  poolReserve: ComputedReserveData,
+  poolReserve: PoolReserveBorrowSubset,
   user: FormatUserSummaryAndIncentivesResponse,
   rateMode: InterestRate
-) {
+): string {
   const availableInPoolUSD = poolReserve.availableLiquidityUSD;
   const availableForUserUSD = BigNumber.min(user.availableBorrowsUSD, availableInPoolUSD);
+
+  const availableBorrowCap =
+    poolReserve.borrowCap === '0'
+      ? valueToBigNumber(ethers.constants.MaxUint256.toString())
+      : valueToBigNumber(Number(poolReserve.borrowCap)).minus(
+          valueToBigNumber(poolReserve.totalDebt)
+        );
+  const availableLiquidity = BigNumber.max(
+    BigNumber.min(poolReserve.formattedAvailableLiquidity, availableBorrowCap),
+    0
+  );
 
   let maxUserAmountToBorrow = BigNumber.min(
     valueToBigNumber(user?.availableBorrowsMarketReferenceCurrency || 0).div(
       poolReserve.formattedPriceInMarketReferenceCurrency
     ),
-    poolReserve.formattedAvailableLiquidity
+    availableLiquidity.toString()
   );
 
   if (rateMode === InterestRate.Stable) {
@@ -65,7 +90,10 @@ export function getMaxAmountAvailableToBorrow(
         .multipliedBy('0.99')
         .lt(user.availableBorrowsUSD));
 
-  return shouldAddMargin ? maxUserAmountToBorrow.multipliedBy('0.99') : maxUserAmountToBorrow;
+  const amountWithMargin = shouldAddMargin
+    ? maxUserAmountToBorrow.multipliedBy('0.99')
+    : maxUserAmountToBorrow;
+  return roundToTokenDecimals(amountWithMargin.toString(10), poolReserve.decimals);
 }
 
 export function assetCanBeBorrowedByUser(

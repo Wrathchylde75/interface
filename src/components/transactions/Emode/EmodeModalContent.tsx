@@ -72,7 +72,7 @@ export const EmodeModalContent = ({ mode }: EmodeModalContentProps) => {
     userReserves,
   } = useAppDataContext();
   const { currentChainId } = useProtocolDataContext();
-  const { chainId: connectedChainId, watchModeOnlyAddress } = useWeb3Context();
+  const { chainId: connectedChainId, readOnlyModeAddress } = useWeb3Context();
   const currentTimestamp = useCurrentTimestamp(1);
   const { gasLimit, mainTxState: emodeTxState, txError } = useModalContext();
 
@@ -119,7 +119,7 @@ export const EmodeModalContent = ({ mode }: EmodeModalContentProps) => {
             <Typography variant="caption">
               <Trans>
                 To enable E-mode for the {selectedEmode && getEmodeMessage(selectedEmode.label)}{' '}
-                category, all borrow positions outside of this cateogry must be closed.
+                category, all borrow positions outside of this category must be closed.
               </Trans>
             </Typography>
           </Warning>
@@ -178,7 +178,7 @@ export const EmodeModalContent = ({ mode }: EmodeModalContentProps) => {
   return (
     <>
       <TxModalTitle title={`${mode} E-Mode`} />
-      {isWrongNetwork && !watchModeOnlyAddress && (
+      {isWrongNetwork && !readOnlyModeAddress && (
         <ChangeNetworkWarning networkName={networkConfig.name} chainId={currentChainId} />
       )}
 

@@ -4,6 +4,7 @@ import { NoData } from 'src/components/primitives/NoData';
 import { useAssetCaps } from 'src/hooks/useAssetCaps';
 import { useModalContext } from 'src/hooks/useModal';
 import { useProtocolDataContext } from 'src/hooks/useProtocolDataContext';
+import { DashboardReserve } from 'src/utils/dashboardSortUtils';
 
 import { CapsHint } from '../../../../components/caps/CapsHint';
 import { CapType } from '../../../../components/caps/helper';
@@ -14,7 +15,6 @@ import { ListButtonsColumn } from '../ListButtonsColumn';
 import { ListItemCanBeCollateral } from '../ListItemCanBeCollateral';
 import { ListItemWrapper } from '../ListItemWrapper';
 import { ListValueColumn } from '../ListValueColumn';
-import { SupplyAssetsItem } from './types';
 
 export const SupplyAssetsListItem = ({
   symbol,
@@ -32,13 +32,13 @@ export const SupplyAssetsListItem = ({
   isIsolated,
   usageAsCollateralEnabledOnUser,
   detailsAddress,
-}: SupplyAssetsItem) => {
+}: DashboardReserve) => {
   const { currentMarket } = useProtocolDataContext();
   const { openSupply } = useModalContext();
 
-  // Hide the asset to prevent it from being supplied if supply cap has been reached
+  // Disable the asset to prevent it from being supplied if supply cap has been reached
   const { supplyCap: supplyCapUsage, debtCeiling } = useAssetCaps();
-  if (supplyCapUsage.isMaxed) return null;
+  const isMaxCapReached = supplyCapUsage.isMaxed;
 
   return (
     <ListItemWrapper
@@ -55,7 +55,7 @@ export const SupplyAssetsListItem = ({
         value={Number(walletBalance)}
         subValue={walletBalanceUSD}
         withTooltip
-        disabled={Number(walletBalance) === 0}
+        disabled={Number(walletBalance) === 0 || isMaxCapReached}
         capsComponent={
           <CapsHint
             capType={CapType.supplyCap}
@@ -81,7 +81,7 @@ export const SupplyAssetsListItem = ({
 
       <ListButtonsColumn>
         <Button
-          disabled={!isActive || isFreezed || Number(walletBalance) <= 0}
+          disabled={!isActive || isFreezed || Number(walletBalance) <= 0 || isMaxCapReached}
           variant="contained"
           onClick={() => openSupply(underlyingAsset)}
         >

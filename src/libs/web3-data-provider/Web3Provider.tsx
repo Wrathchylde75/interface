@@ -10,7 +10,7 @@ import { useWeb3React } from '@web3-react/core';
 import { TorusConnector } from '@web3-react/torus-connector';
 import { WalletConnectConnector } from '@web3-react/walletconnect-connector';
 import { WalletLinkConnector } from '@web3-react/walletlink-connector';
-import { BigNumber, providers } from 'ethers';
+import { BigNumber, PopulatedTransaction, providers } from 'ethers';
 import React, { ReactElement, useCallback, useEffect, useState } from 'react';
 import { useRootStore } from 'src/store/root';
 import { getNetworkConfig } from 'src/utils/marketsAndNetworksConfig';
@@ -18,7 +18,7 @@ import { hexToAscii } from 'src/utils/utils';
 import { isLedgerDappBrowserProvider } from 'web3-ledgerhq-frame-connector';
 
 import { Web3Context } from '../hooks/useWeb3Context';
-import { getWallet, WalletType, WatchModeOnlyConnector } from './WalletOptions';
+import { getWallet, ReadOnlyModeConnector, WalletType } from './WalletOptions';
 
 export type ERC20TokenType = {
   address: string;
@@ -30,7 +30,7 @@ export type ERC20TokenType = {
 
 export type Web3Data = {
   connectWallet: (wallet: WalletType) => Promise<void>;
-  connectWatchModeOnly: (address: string) => Promise<void>;
+  connectReadOnlyMode: (address: string) => Promise<void>;
   disconnectWallet: () => void;
   currentAccount: string;
   connected: boolean;
@@ -39,15 +39,15 @@ export type Web3Data = {
   chainId: number;
   switchNetwork: (chainId: number) => Promise<void>;
   getTxError: (txHash: string) => Promise<string>;
-  sendTx: (txData: transactionType) => Promise<TransactionResponse>;
+  sendTx: (txData: transactionType | PopulatedTransaction) => Promise<TransactionResponse>;
   addERC20Token: (args: ERC20TokenType) => Promise<boolean>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   signTxData: (unsignedData: string) => Promise<SignatureLike>;
   error: Error | undefined;
   switchNetworkError: Error | undefined;
   setSwitchNetworkError: (err: Error | undefined) => void;
-  watchModeOnlyAddress: string | undefined;
-  watchModeOnly: boolean;
+  readOnlyModeAddress: string | undefined;
+  readOnlyMode: boolean;
 };
 
 export const Web3ContextProvider: React.FC<{ children: ReactElement }> = ({ children }) => {
@@ -69,10 +69,11 @@ export const Web3ContextProvider: React.FC<{ children: ReactElement }> = ({ chil
   const [deactivated, setDeactivated] = useState(false);
   const [triedGnosisSafe, setTriedGnosisSafe] = useState(false);
   const [triedCoinbase, setTriedCoinbase] = useState(false);
-  const [watchModeOnly, setWatchModeOnly] = useState(false);
+  const [readOnlyMode, setReadOnlyMode] = useState(false);
   const [triedLedger, setTriedLedger] = useState(false);
   const [switchNetworkError, setSwitchNetworkError] = useState<Error>();
   const setAccount = useRootStore((store) => store.setAccount);
+  const setAccountLoading = useRootStore((store) => store.setAccountLoading);
 
   // for now we use network changed as it returns the chain string instead of hex
   // const handleChainChanged = (chainId: number) => {
@@ -118,9 +119,9 @@ export const Web3ContextProvider: React.FC<{ children: ReactElement }> = ({ chil
     setSwitchNetworkError(undefined);
   }, [provider, connector]);
 
-  const connectWatchModeOnly = (address: string): Promise<void> => {
-    localStorage.setItem('watchModeOnlyAddress', address);
-    return connectWallet(WalletType.WATCH_MODE_ONLY);
+  const connectReadOnlyMode = (address: string): Promise<void> => {
+    localStorage.setItem('readOnlyModeAddress', address);
+    return connectWallet(WalletType.READ_ONLY_MODE);
   };
 
   // connect to the wallet specified by wallet type
@@ -130,11 +131,10 @@ export const Web3ContextProvider: React.FC<{ children: ReactElement }> = ({ chil
       try {
         const connector: AbstractConnector = getWallet(wallet, chainId);
 
-        if (connector instanceof WatchModeOnlyConnector) {
-          setWatchModeOnly(true);
+        if (connector instanceof ReadOnlyModeConnector) {
+          setReadOnlyMode(true);
         } else {
-          setAccount('');
-          setWatchModeOnly(false);
+          setReadOnlyMode(false);
         }
 
         if (connector instanceof WalletConnectConnector) {
@@ -306,7 +306,9 @@ export const Web3ContextProvider: React.FC<{ children: ReactElement }> = ({ chil
 
   // TODO: we use from instead of currentAccount because of the mock wallet.
   // If we used current account then the tx could get executed
-  const sendTx = async (txData: transactionType): Promise<TransactionResponse> => {
+  const sendTx = async (
+    txData: transactionType | PopulatedTransaction
+  ): Promise<TransactionResponse> => {
     if (provider) {
       const { from, ...data } = txData;
       const signer = provider.getSigner(from);
@@ -421,12 +423,16 @@ export const Web3ContextProvider: React.FC<{ children: ReactElement }> = ({ chil
     setAccount(account?.toLowerCase());
   }, [account]);
 
+  useEffect(() => {
+    setAccountLoading(loading);
+  }, [loading]);
+
   return (
     <Web3Context.Provider
       value={{
         web3ProviderData: {
           connectWallet,
-          connectWatchModeOnly,
+          connectReadOnlyMode,
           disconnectWallet,
           provider,
           connected: active,
@@ -441,8 +447,8 @@ export const Web3ContextProvider: React.FC<{ children: ReactElement }> = ({ chil
           error,
           switchNetworkError,
           setSwitchNetworkError,
-          watchModeOnlyAddress: watchModeOnly ? account?.toLowerCase() : undefined,
-          watchModeOnly,
+          readOnlyModeAddress: readOnlyMode ? account?.toLowerCase() : undefined,
+          readOnlyMode,
         },
       }}
     >

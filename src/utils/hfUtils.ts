@@ -2,6 +2,7 @@ import {
   BigNumberValue,
   calculateHealthFactorFromBalancesBigUnits,
   ComputedUserReserve,
+  UserReserveData,
   valueToBigNumber,
 } from '@aave/math-utils';
 import BigNumber from 'bignumber.js';
@@ -25,7 +26,7 @@ interface CalculateHFAfterSwapRepayProps {
   fromAssetData: ComputedReserveData;
   toAssetData: ComputedReserveData;
   user: ExtendedFormattedUser;
-  repayWithUserReserve?: ComputedUserReserve;
+  repayWithUserReserve?: UserReserveData;
   debt: string;
 }
 
@@ -48,7 +49,10 @@ export function calculateHFAfterSwap({
   // it takes into account if in emode as threshold is different
   let hfEffectOfFromAmount = '0';
 
-  if (fromAssetUserData.usageAsCollateralEnabledOnUser && fromAssetData.usageAsCollateralEnabled) {
+  if (
+    fromAssetUserData.usageAsCollateralEnabledOnUser &&
+    fromAssetData.reserveLiquidationThreshold !== '0'
+  ) {
     hfEffectOfFromAmount = calculateHealthFactorFromBalancesBigUnits({
       collateralBalanceMarketReferenceCurrency: valueToBigNumber(fromAmount).multipliedBy(
         fromAssetData.formattedPriceInMarketReferenceCurrency
@@ -137,7 +141,8 @@ export const calculateHFAfterRepay = ({
   });
 
   const hfRealEffectOfFromAmount =
-    fromAssetData.usageAsCollateralEnabled && repayWithUserReserve?.usageAsCollateralEnabledOnUser
+    fromAssetData.reserveLiquidationThreshold !== '0' &&
+    repayWithUserReserve?.usageAsCollateralEnabledOnUser
       ? calculateHealthFactorFromBalancesBigUnits({
           collateralBalanceMarketReferenceCurrency: valueToBigNumber(amountToSwap).multipliedBy(
             fromAssetData.priceInUSD

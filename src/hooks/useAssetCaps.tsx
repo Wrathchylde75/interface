@@ -1,4 +1,5 @@
 import { valueToBigNumber } from '@aave/math-utils';
+import { SxProps, Theme } from '@mui/system';
 import { createContext, ReactNode, useContext } from 'react';
 import { BorrowCapMaxedTooltip } from 'src/components/infoTooltips/BorrowCapMaxedTooltip';
 import { DebtCeilingMaxedTooltip } from 'src/components/infoTooltips/DebtCeilingMaxedTooltip';
@@ -14,6 +15,7 @@ type WarningDisplayProps = {
   borrowCap?: AssetCapData;
   debtCeiling?: AssetCapData;
   icon?: boolean;
+  sx?: SxProps<Theme>;
 };
 
 export type AssetCapData = {
@@ -34,39 +36,9 @@ export type AssetCapUsageData = {
 };
 
 const getAssetCapData = (asset: ComputedReserveData): AssetCapUsageData => {
-  /*
-  Supply Cap Data
-    % of totalLiquidity / supplyCap
-    Set as zero if either is zero
-  */
-  let supplyCapUsage: number = asset
-    ? valueToBigNumber(asset.totalLiquidity).dividedBy(asset.supplyCap).toNumber() * 100
-    : 0;
-  supplyCapUsage = supplyCapUsage === Infinity ? 0 : supplyCapUsage;
-  const supplyCapReached = supplyCapUsage >= 99.99;
-
-  /*
-  Borrow Cap Data
-    % of totalDebt / borrowCap
-    Set as zero if either is zero
-  */
-  let borrowCapUsage: number = asset
-    ? valueToBigNumber(asset.totalDebt).dividedBy(asset.borrowCap).toNumber() * 100
-    : 0;
-  borrowCapUsage = borrowCapUsage === Infinity ? 0 : borrowCapUsage;
-  const borrowCapReached = borrowCapUsage >= 99.99;
-
-  /*
-    Debt Ceiling Data
-    % of isolationModeTotalDebt / debtCeiling
-    Set as zero if either is zero
-  */
-  let debtCeilingUsage: number = asset
-    ? valueToBigNumber(asset.isolationModeTotalDebt).dividedBy(asset.debtCeiling).toNumber() * 100
-    : 0;
-  debtCeilingUsage = debtCeilingUsage === Infinity ? 0 : debtCeilingUsage;
-  const debtCeilingReached = debtCeilingUsage >= 99.99;
-
+  const { supplyCapUsage, supplyCapReached } = getSupplyCapData(asset);
+  const { borrowCapUsage, borrowCapReached } = getBorrowCapData(asset);
+  const { debtCeilingUsage, debtCeilingReached } = getDebtCeilingData(asset);
   /*
     Aggregated Data
   */
@@ -77,8 +49,8 @@ const getAssetCapData = (asset: ComputedReserveData): AssetCapUsageData => {
       isMaxed: supplyCapReached,
       // percentUsed: 99.9,
       // isMaxed: true,
-      determineWarningDisplay: ({ supplyCap, icon }) =>
-        supplyCap ? <SupplyCapWarning supplyCap={supplyCap} icon={icon} /> : null,
+      determineWarningDisplay: ({ supplyCap, icon, ...rest }) =>
+        supplyCap ? <SupplyCapWarning supplyCap={supplyCap} icon={icon} {...rest} /> : null,
       displayMaxedTooltip: ({ supplyCap }) =>
         supplyCap ? <SupplyCapMaxedTooltip supplyCap={supplyCap} /> : null,
     },
@@ -87,8 +59,8 @@ const getAssetCapData = (asset: ComputedReserveData): AssetCapUsageData => {
       isMaxed: borrowCapReached,
       // percentUsed: 98.5,
       // isMaxed: false,
-      determineWarningDisplay: ({ borrowCap, icon }) =>
-        borrowCap ? <BorrowCapWarning borrowCap={borrowCap} icon={icon} /> : null,
+      determineWarningDisplay: ({ borrowCap, icon, ...rest }) =>
+        borrowCap ? <BorrowCapWarning borrowCap={borrowCap} icon={icon} {...rest} /> : null,
       displayMaxedTooltip: ({ borrowCap }) =>
         borrowCap ? <BorrowCapMaxedTooltip borrowCap={borrowCap} /> : null,
     },
@@ -97,8 +69,8 @@ const getAssetCapData = (asset: ComputedReserveData): AssetCapUsageData => {
       isMaxed: debtCeilingReached,
       // percentUsed: 99.994,
       // isMaxed: true,
-      determineWarningDisplay: ({ debtCeiling, icon }) =>
-        debtCeiling ? <DebtCeilingWarning debtCeiling={debtCeiling} icon={icon} /> : null,
+      determineWarningDisplay: ({ debtCeiling, icon, ...rest }) =>
+        debtCeiling ? <DebtCeilingWarning debtCeiling={debtCeiling} icon={icon} {...rest} /> : null,
       displayMaxedTooltip: ({ debtCeiling }) =>
         debtCeiling ? <DebtCeilingMaxedTooltip debtCeiling={debtCeiling} /> : null,
     },
@@ -147,4 +119,46 @@ export const useAssetCaps = () => {
   }
 
   return context;
+};
+
+/**
+ * Calculates supply cap usage and % of totalLiquidity / supplyCap.
+ * @param asset ComputedReserveData
+ * @returns { supplyCapUsage: number, supplyCapReached: boolean }
+ */
+export const getSupplyCapData = (asset: ComputedReserveData) => {
+  let supplyCapUsage: number = asset
+    ? valueToBigNumber(asset.totalLiquidity).dividedBy(asset.supplyCap).toNumber() * 100
+    : 0;
+  supplyCapUsage = supplyCapUsage === Infinity ? 0 : supplyCapUsage;
+  const supplyCapReached = supplyCapUsage >= 99.99;
+  return { supplyCapUsage, supplyCapReached };
+};
+
+/**
+ * Calculates borrow cap usage and % of totalDebt / borrowCap.
+ * @param asset ComputedReserveData
+ * @returns { borrowCapUsage: number, borrowCapReached: boolean }
+ */
+export const getBorrowCapData = (asset: ComputedReserveData) => {
+  let borrowCapUsage: number = asset
+    ? valueToBigNumber(asset.totalDebt).dividedBy(asset.borrowCap).toNumber() * 100
+    : 0;
+  borrowCapUsage = borrowCapUsage === Infinity ? 0 : borrowCapUsage;
+  const borrowCapReached = borrowCapUsage >= 99.99;
+  return { borrowCapUsage, borrowCapReached };
+};
+
+/**
+ * Calculates debt ceiling usage and % of isolationModeTotalDebt / debtCeiling.
+ * @param asset
+ * @returns {debtCeilingUsage: number, debtCeilingReached: boolean}
+ */
+export const getDebtCeilingData = (asset: ComputedReserveData) => {
+  let debtCeilingUsage: number = asset
+    ? valueToBigNumber(asset.isolationModeTotalDebt).dividedBy(asset.debtCeiling).toNumber() * 100
+    : 0;
+  debtCeilingUsage = debtCeilingUsage === Infinity ? 0 : debtCeilingUsage;
+  const debtCeilingReached = debtCeilingUsage >= 99.99;
+  return { debtCeilingUsage, debtCeilingReached };
 };

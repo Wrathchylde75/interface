@@ -28,9 +28,7 @@ export const configEnvWithTenderly = ({
   const privateKey: string = wallet != null ? wallet.privateKey : DEFAULT_TEST_ACCOUNT.privateKey;
   before(async () => {
     await tenderly.init();
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    await setTimeout(() => {}, 3000);
-
+    await new Promise((resolve) => setTimeout(resolve, 3000));
     await tenderly.add_balance_rpc(walletAddress);
     if (unpause) {
       await tenderly.unpauseMarket();
@@ -203,4 +201,16 @@ export const configEnvWithTenderlyArbitrumFork = ({
   v3?: boolean;
 }) => {
   configEnvWithTenderly({ chainId: ChainId.arbitrum_one, market, tokens, unpause: v3 });
+};
+
+export const configEnvWithTenderlyAEthereumV3Fork = ({
+  market = `fork_proto_mainnet_v3`,
+  tokens,
+  v3,
+}: {
+  market?: string;
+  tokens?: { address: string }[];
+  v3?: boolean;
+}) => {
+  configEnvWithTenderly({ chainId: ChainId.mainnet, market, tokens, unpause: v3 });
 };

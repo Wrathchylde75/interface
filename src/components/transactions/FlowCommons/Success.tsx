@@ -4,6 +4,7 @@ import { CheckIcon } from '@heroicons/react/solid';
 import { Trans } from '@lingui/macro';
 import { Box, Button, Link, SvgIcon, Typography, useTheme } from '@mui/material';
 import { ReactNode, useState } from 'react';
+import { WalletIcon } from 'src/components/icons/WalletIcon';
 import { FormattedNumber } from 'src/components/primitives/FormattedNumber';
 import { Base64Token, TokenIcon } from 'src/components/primitives/TokenIcon';
 import { useModalContext } from 'src/hooks/useModal';
@@ -12,12 +13,15 @@ import { useWeb3Context } from 'src/libs/hooks/useWeb3Context';
 import { ERC20TokenType } from 'src/libs/web3-data-provider/Web3Provider';
 
 export type SuccessTxViewProps = {
+  txHash?: string;
   action?: ReactNode;
   amount?: string;
   symbol?: string;
   collateral?: boolean;
   rate?: InterestRate;
   addToken?: ERC20TokenType;
+  customAction?: ReactNode;
+  customText?: ReactNode;
 };
 
 const ExtLinkIcon = () => (
@@ -27,12 +31,15 @@ const ExtLinkIcon = () => (
 );
 
 export const TxSuccessView = ({
+  txHash,
   action,
   amount,
   symbol,
   collateral,
   rate,
   addToken,
+  customAction,
+  customText,
 }: SuccessTxViewProps) => {
   const { close, mainTxState } = useModalContext();
   const { addERC20Token } = useWeb3Context();
@@ -91,6 +98,13 @@ export const TxSuccessView = ({
             </Typography>
           )}
 
+          {customAction && (
+            <Typography>
+              {customText}
+              {customAction}
+            </Typography>
+          )}
+
           {!action && !amount && symbol && (
             <Typography>
               Your {symbol} {collateral ? 'now' : 'is not'} used as collateral
@@ -120,7 +134,7 @@ export const TxSuccessView = ({
               })}
             >
               <TokenIcon
-                symbol={symbol}
+                symbol={addToken.symbol}
                 aToken={addToken && addToken.aToken ? true : false}
                 sx={{ fontSize: '32px', mt: '12px', mb: '8px' }}
               />
@@ -150,12 +164,7 @@ export const TxSuccessView = ({
                     aToken={addToken.aToken}
                   />
                 )}
-                <img
-                  src="/icons/wallets/walletIcon.svg"
-                  width="24px"
-                  height="24px"
-                  alt="wallet icon"
-                />
+                <WalletIcon sx={{ width: '20px', height: '20px' }} />
                 <Typography variant="buttonM" color="white" ml="4px">
                   <Trans>Add to wallet</Trans>
                 </Typography>
@@ -168,7 +177,9 @@ export const TxSuccessView = ({
       <Box sx={{ display: 'flex', flexDirection: 'column' }}>
         <Link
           variant="helperText"
-          href={currentNetworkConfig.explorerLinkBuilder({ tx: mainTxState.txHash })}
+          href={currentNetworkConfig.explorerLinkBuilder({
+            tx: txHash ? txHash : mainTxState.txHash,
+          })}
           sx={{
             display: 'inline-flex',
             alignItems: 'center',

@@ -12,7 +12,9 @@ export enum ApprovalMethod {
 
 export interface WalletSlice {
   account: string;
+  accountLoading: boolean;
   setAccount: (account: string | undefined) => void;
+  setAccountLoading: (loading: boolean) => void;
   isWalletModalOpen: boolean;
   setWalletModalOpen: (open: boolean) => void;
   walletBalances?: {
@@ -37,15 +39,19 @@ const getWalletPreferences = () => {
 
 export const createWalletSlice: StateCreator<
   RootStore,
-  [['zustand/devtools', never]],
+  [['zustand/subscribeWithSelector', never], ['zustand/devtools', never]],
   [],
   WalletSlice
 > = (set, get) => ({
   account: '',
+  accountLoading: false,
   setAccount(account) {
     set({ account: account || '', isWalletModalOpen: false });
     const refresh = get().refreshWalletApprovalMethod;
     refresh();
+  },
+  setAccountLoading(loading) {
+    set({ accountLoading: loading });
   },
   isWalletModalOpen: false,
   setWalletModalOpen(open) {

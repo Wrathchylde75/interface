@@ -10,6 +10,7 @@ import { GasEstimationError } from '../FlowCommons/GasEstimationError';
 import { ModalWrapperProps } from '../FlowCommons/ModalWrapper';
 import { TxSuccessView } from '../FlowCommons/Success';
 import { DetailsHFLine, DetailsNumberLine, TxModalDetails } from '../FlowCommons/TxModalDetails';
+import { zeroLTVBlockingWithdraw } from '../utils';
 import { IsolationModeWarning } from '../Warnings/IsolationModeWarning';
 import { CollateralChangeActions } from './CollateralChangeActions';
 
@@ -21,6 +22,7 @@ export enum ErrorType {
   DO_NOT_HAVE_SUPPLIES_IN_THIS_CURRENCY,
   CAN_NOT_USE_THIS_CURRENCY_AS_COLLATERAL,
   CAN_NOT_SWITCH_USAGE_AS_COLLATERAL_MODE,
+  ZERO_LTV_WITHDRAW_BLOCKED,
 }
 
 export const CollateralChangeModalContent = ({
@@ -55,13 +57,18 @@ export const CollateralChangeModalContent = ({
     currentLiquidationThreshold: user.currentLiquidationThreshold,
   });
 
+  const assetsBlockingWithdraw: string[] = zeroLTVBlockingWithdraw(user);
+
   // error handling
   let blockingError: ErrorType | undefined = undefined;
-  if (valueToBigNumber(userReserve.underlyingBalance).eq(0)) {
+  if (assetsBlockingWithdraw.length > 0 && !assetsBlockingWithdraw.includes(poolReserve.symbol)) {
+    blockingError = ErrorType.ZERO_LTV_WITHDRAW_BLOCKED;
+  } else if (valueToBigNumber(userReserve.underlyingBalance).eq(0)) {
     blockingError = ErrorType.DO_NOT_HAVE_SUPPLIES_IN_THIS_CURRENCY;
   } else if (
-    (!userReserve.usageAsCollateralEnabledOnUser && !poolReserve.usageAsCollateralEnabled) ||
-    !poolReserve.usageAsCollateralEnabled
+    (!userReserve.usageAsCollateralEnabledOnUser &&
+      poolReserve.reserveLiquidationThreshold === '0') ||
+    poolReserve.reserveLiquidationThreshold === '0'
   ) {
     blockingError = ErrorType.CAN_NOT_USE_THIS_CURRENCY_AS_COLLATERAL;
   } else if (
@@ -73,7 +80,7 @@ export const CollateralChangeModalContent = ({
   }
 
   // error render handling
-  const handleBlocked = () => {
+  const BlockingError: React.FC = () => {
     switch (blockingError) {
       case ErrorType.DO_NOT_HAVE_SUPPLIES_IN_THIS_CURRENCY:
         return <Trans>You do not have supplies in this currency</Trans>;
@@ -84,6 +91,13 @@ export const CollateralChangeModalContent = ({
           <Trans>
             You can not switch usage as collateral mode for this currency, because it will cause
             collateral call
+          </Trans>
+        );
+      case ErrorType.ZERO_LTV_WITHDRAW_BLOCKED:
+        return (
+          <Trans>
+            Assets with zero LTV ({assetsBlockingWithdraw}) must be withdrawn or disabled as
+            collateral to perform this action
           </Trans>
         );
       default:
@@ -127,8 +141,8 @@ export const CollateralChangeModalContent = ({
 
       <TxModalDetails gasLimit={gasLimit}>
         <DetailsNumberLine
-          symbol={symbol}
-          iconSymbol={symbol}
+          symbol={poolReserve.symbol}
+          iconSymbol={poolReserve.iconSymbol}
           description={<Trans>Supply balance</Trans>}
           value={userReserve.underlyingBalance}
         />
@@ -141,7 +155,7 @@ export const CollateralChangeModalContent = ({
 
       {blockingError !== undefined && (
         <Typography variant="helperText" color="error.main">
-          {handleBlocked()}
+          <BlockingError />
         </Typography>
       )}
 

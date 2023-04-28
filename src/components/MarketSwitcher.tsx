@@ -34,8 +34,17 @@ export const getMarketInfoById = (marketId: CustomMarket) => {
   return { market, network };
 };
 
-const getMarketHelpData = (marketName: string) => {
-  const testChains = ['Görli', 'Ropsten', 'Mumbai', 'Fuji', 'Testnet', 'Kovan', 'Rinkeby'];
+export const getMarketHelpData = (marketName: string) => {
+  const testChains = [
+    'Görli',
+    'Ropsten',
+    'Mumbai',
+    'Sepolia',
+    'Fuji',
+    'Testnet',
+    'Kovan',
+    'Rinkeby',
+  ];
   const arrayName = marketName.split(' ');
   const testChainName = arrayName.filter((el) => testChains.indexOf(el) > -1);
   const marketTitle = arrayName.filter((el) => !testChainName.includes(el)).join(' ');
@@ -172,7 +181,8 @@ export const MarketSwitcher = () => {
         },
         sx: {
           '&.MarketSwitcher__select .MuiSelect-outlined': {
-            p: 0,
+            pl: 0,
+            py: 0,
             backgroundColor: 'transparent !important',
           },
           '.MuiSelect-icon': { color: '#F1F1F3' },

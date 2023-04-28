@@ -12,6 +12,7 @@ import { ReserveOverviewBox } from 'src/components/ReserveOverviewBox';
 import { getEmodeMessage } from 'src/components/transactions/Emode/EmodeNaming';
 import { AMPLWarning } from 'src/components/Warnings/AMPLWarning';
 import { BorrowDisabledWarning } from 'src/components/Warnings/BorrowDisabledWarning';
+import { BUSDOffBoardingWarning } from 'src/components/Warnings/BUSDOffBoardingWarning';
 import { ComputedReserveData } from 'src/hooks/app-data-provider/useAppDataProvider';
 import { useAssetCaps } from 'src/hooks/useAssetCaps';
 import { useProtocolDataContext } from 'src/hooks/useProtocolDataContext';
@@ -33,7 +34,9 @@ export const ReserveConfiguration: React.FC<ReserveConfigurationProps> = ({ rese
   const reserveId =
     reserve.underlyingAsset + currentMarketData.addresses.LENDING_POOL_ADDRESS_PROVIDER;
   const renderCharts =
-    !!currentNetworkConfig.ratesHistoryApiUrl && !BROKEN_ASSETS.includes(reserveId);
+    !!currentNetworkConfig.ratesHistoryApiUrl &&
+    !currentMarketData.disableCharts &&
+    !BROKEN_ASSETS.includes(reserveId);
   const { supplyCap, borrowCap, debtCeiling } = useAssetCaps();
   const showSupplyCapStatus: boolean = reserve.supplyCap !== '0';
   const showBorrowCapStatus: boolean = reserve.borrowCap !== '0';
@@ -46,7 +49,10 @@ export const ReserveConfiguration: React.FC<ReserveConfigurationProps> = ({ rese
           alignItems: 'center',
           gap: 6,
           flexWrap: 'wrap',
-          mb: reserve.isFrozen || reserve.symbol == 'AMPL' ? '0px' : '36px',
+          mb:
+            reserve.isFrozen || reserve.symbol == 'AMPL' || reserve.symbol === 'stETH'
+              ? '0px'
+              : '36px',
         }}
       >
         <Typography variant="h3">
@@ -55,7 +61,7 @@ export const ReserveConfiguration: React.FC<ReserveConfigurationProps> = ({ rese
       </Box>
 
       <Box>
-        {reserve.isFrozen ? (
+        {reserve.isFrozen && reserve.symbol != 'BUSD' ? (
           <Warning sx={{ mt: '16px', mb: '40px' }} severity="error">
             <Trans>
               This asset is frozen due to an Aave community decision.{' '}
@@ -66,6 +72,10 @@ export const ReserveConfiguration: React.FC<ReserveConfigurationProps> = ({ rese
                 <Trans>More details</Trans>
               </Link>
             </Trans>
+          </Warning>
+        ) : reserve.symbol === 'BUSD' ? (
+          <Warning sx={{ mt: '16px', mb: '40px' }} severity="error">
+            <BUSDOffBoardingWarning />
           </Warning>
         ) : (
           reserve.symbol == 'AMPL' && (

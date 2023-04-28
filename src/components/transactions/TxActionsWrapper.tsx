@@ -1,7 +1,6 @@
 import { CheckIcon } from '@heroicons/react/solid';
 import { Trans } from '@lingui/macro';
 import { Box, BoxProps, Button, CircularProgress, SvgIcon, Typography } from '@mui/material';
-import isEmpty from 'lodash/isEmpty';
 import { ReactNode } from 'react';
 import { TxStateType, useModalContext } from 'src/hooks/useModal';
 import { useWeb3Context } from 'src/libs/hooks/useWeb3Context';
@@ -55,7 +54,7 @@ export const TxActionsWrapper = ({
   ...rest
 }: TxActionsWrapperProps) => {
   const { txError } = useModalContext();
-  const { watchModeOnlyAddress } = useWeb3Context();
+  const { readOnlyModeAddress } = useWeb3Context();
 
   const hasApprovalError =
     requiresApproval && txError?.txAction === TxAction.APPROVAL && txError?.actionBlocked;
@@ -74,7 +73,7 @@ export const TxActionsWrapper = ({
     if (isWrongNetwork) return { disabled: true, content: <Trans>Wrong Network</Trans> };
     if (fetchingData) return { disabled: true, content: <Trans>Fetching data...</Trans> };
     if (isAmountMissing) return { disabled: true, content: <Trans>Enter an amount</Trans> };
-    if (preparingTransactions || isEmpty(mainTxState)) return { disabled: true, loading: true };
+    if (preparingTransactions) return { disabled: true, loading: true };
     // if (hasApprovalError && handleRetry)
     //   return { content: <Trans>Retry with approval</Trans>, handleClick: handleRetry };
     if (mainTxState?.loading)
@@ -126,13 +125,13 @@ export const TxActionsWrapper = ({
   const approvalParams = getApprovalParams();
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', mt: 12, ...sx }} {...rest}>
-      {requiresApproval && !watchModeOnlyAddress && (
+      {requiresApproval && !readOnlyModeAddress && (
         <Box sx={{ display: 'flex', justifyContent: 'end', alignItems: 'center' }}>
           <RightHelperText approvalHash={approvalTxState?.txHash} tryPermit={tryPermit} />
         </Box>
       )}
 
-      {approvalParams && !watchModeOnlyAddress && (
+      {approvalParams && !readOnlyModeAddress && (
         <Button
           variant="contained"
           disabled={approvalParams.disabled || blocked}
@@ -150,7 +149,7 @@ export const TxActionsWrapper = ({
 
       <Button
         variant="contained"
-        disabled={disabled || blocked || watchModeOnlyAddress !== undefined}
+        disabled={disabled || blocked || readOnlyModeAddress !== undefined}
         onClick={handleClick}
         size="large"
         sx={{ minHeight: '44px', ...(approvalParams ? { mt: 2 } : {}) }}
@@ -159,9 +158,9 @@ export const TxActionsWrapper = ({
         {loading && <CircularProgress color="inherit" size="16px" sx={{ mr: 2 }} />}
         {content}
       </Button>
-      {watchModeOnlyAddress && (
+      {readOnlyModeAddress && (
         <Typography variant="helperText" color="warning.main" sx={{ textAlign: 'center', mt: 2 }}>
-          <Trans>Watch-only mode. Connect to a wallet to perform transactions.</Trans>
+          <Trans>Read-only mode. Connect to a wallet to perform transactions.</Trans>
         </Typography>
       )}
     </Box>

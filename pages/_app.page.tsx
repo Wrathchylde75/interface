@@ -6,7 +6,6 @@ import { providers } from 'ethers';
 import { NextPage } from 'next';
 import { AppProps } from 'next/app';
 import Head from 'next/head';
-import AaveMetaImage from 'public/aaveMetaLogo-min.jpg';
 import * as React from 'react';
 import { AddressBlocked } from 'src/components/AddressBlocked';
 import { Meta } from 'src/components/Meta';
@@ -16,6 +15,7 @@ import { CollateralChangeModal } from 'src/components/transactions/CollateralCha
 import { EmodeModal } from 'src/components/transactions/Emode/EmodeModal';
 import { FaucetModal } from 'src/components/transactions/Faucet/FaucetModal';
 import { GasStationProvider } from 'src/components/transactions/GasStation/GasStationProvider';
+import { MigrateV3Modal } from 'src/components/transactions/MigrateV3/MigrateV3Modal';
 import { RateSwitchModal } from 'src/components/transactions/RateSwitch/RateSwitchModal';
 import { RepayModal } from 'src/components/transactions/Repay/RepayModal';
 import { SupplyModal } from 'src/components/transactions/Supply/SupplyModal';
@@ -62,7 +62,7 @@ export default function MyApp(props: MyAppProps) {
         description={
           'Aave is an Open Source Protocol to create Non-Custodial Liquidity Markets to earn interest on supplying and borrowing assets with a variable or stable interest rate. The protocol is designed for easy integration into your products and services.'
         }
-        imageUrl={AaveMetaImage.src}
+        imageUrl="https://app.aave.com/aaveMetaLogo-min.jpg"
       />
       <LanguageProvider>
         <Web3ReactProvider getLibrary={getWeb3Library}>
@@ -85,6 +85,7 @@ export default function MyApp(props: MyAppProps) {
                           <EmodeModal />
                           <SwapModal />
                           <FaucetModal />
+                          <MigrateV3Modal />
                         </GasStationProvider>
                       </AppDataProvider>
                     </BackgroundDataProvider>

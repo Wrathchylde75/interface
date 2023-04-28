@@ -18,10 +18,10 @@ describe('Manipulation on the wallet connect', () => {
     configEnvWithTenderlyMainnetFork({});
 
     it('step1:Disconnect wallet', () => {
-      cy.wait(1000);
+      cy.wait(2000);
       cy.get(walletButtonlocator).click();
-      cy.wait(3000);
-      cy.contains('Disconnect').click();
+      cy.wait(7000);
+      cy.get(`[data-cy="disconnect-wallet"]`).click();
       cy.contains('Please, connect your wallet').should('be.visible');
     });
 
@@ -41,7 +41,7 @@ describe('Manipulation on the wallet connect', () => {
 describe('CASE2:Connect and disconnect wallet over Coinbase', () => {
   it('step1:Connect wallet over Coinbase', () => {
     cy.wait(1000);
-    cy.get(walletButtonlocator).click();
+    //cy.get(walletButtonlocator).click();
     cy.wait(3000);
     optionOnConnectionModal('Coinbase');
     checkElementsOnModal('.-cbwsdk-extension-dialog-box', 'Try the Coinbase Wallet extension');

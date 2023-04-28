@@ -1,12 +1,13 @@
 import { InterestRate } from '@aave/contract-helpers';
 import { Trans } from '@lingui/macro';
 import { Box, Button } from '@mui/material';
+import { useAssetCaps } from 'src/hooks/useAssetCaps';
 import { useProtocolDataContext } from 'src/hooks/useProtocolDataContext';
+import { DashboardReserve } from 'src/utils/dashboardSortUtils';
 
 import { IncentivesCard } from '../../../../components/incentives/IncentivesCard';
 import { APYTypeTooltip } from '../../../../components/infoTooltips/APYTypeTooltip';
 import { Row } from '../../../../components/primitives/Row';
-import { ComputedUserReserveData } from '../../../../hooks/app-data-provider/useAppDataProvider';
 import { useModalContext } from '../../../../hooks/useModal';
 import { ListItemAPYButton } from '../ListItemAPYButton';
 import { ListMobileItemWrapper } from '../ListMobileItemWrapper';
@@ -14,13 +15,16 @@ import { ListValueRow } from '../ListValueRow';
 
 export const BorrowedPositionsListMobileItem = ({
   reserve,
-  totalBorrows,
-  totalBorrowsUSD,
+  variableBorrows,
+  variableBorrowsUSD,
+  stableBorrows,
+  stableBorrowsUSD,
   borrowRateMode,
   stableBorrowAPY,
-}: ComputedUserReserveData & { borrowRateMode: InterestRate }) => {
+}: DashboardReserve) => {
   const { currentMarket } = useProtocolDataContext();
   const { openBorrow, openRepay, openRateSwitch } = useModalContext();
+  const { borrowCap } = useAssetCaps();
   const {
     symbol,
     iconSymbol,
@@ -35,6 +39,20 @@ export const BorrowedPositionsListMobileItem = ({
     underlyingAsset,
   } = reserve;
 
+  const totalBorrows = Number(
+    borrowRateMode === InterestRate.Variable ? variableBorrows : stableBorrows
+  );
+
+  const totalBorrowsUSD = Number(
+    borrowRateMode === InterestRate.Variable ? variableBorrowsUSD : stableBorrowsUSD
+  );
+
+  const apy = Number(
+    borrowRateMode === InterestRate.Variable ? variableBorrowAPY : stableBorrowAPY
+  );
+
+  const incentives = borrowRateMode === InterestRate.Variable ? vIncentivesData : sIncentivesData;
+
   return (
     <ListMobileItemWrapper
       symbol={symbol}
@@ -48,20 +66,13 @@ export const BorrowedPositionsListMobileItem = ({
     >
       <ListValueRow
         title={<Trans>Debt</Trans>}
-        value={Number(totalBorrows)}
-        subValue={Number(totalBorrowsUSD)}
-        disabled={Number(totalBorrows) === 0}
+        value={totalBorrows}
+        subValue={totalBorrowsUSD}
+        disabled={totalBorrows === 0}
       />
 
       <Row caption={<Trans>APY</Trans>} align="flex-start" captionVariant="description" mb={2}>
-        <IncentivesCard
-          value={Number(
-            borrowRateMode === InterestRate.Variable ? variableBorrowAPY : stableBorrowAPY
-          )}
-          incentives={borrowRateMode === InterestRate.Variable ? vIncentivesData : sIncentivesData}
-          symbol={symbol}
-          variant="secondary14"
-        />
+        <IncentivesCard value={apy} incentives={incentives} symbol={symbol} variant="secondary14" />
       </Row>
 
       <Row
@@ -94,7 +105,7 @@ export const BorrowedPositionsListMobileItem = ({
           <Trans>Repay</Trans>
         </Button>
         <Button
-          disabled={!isActive || !borrowingEnabled || isFrozen}
+          disabled={!isActive || !borrowingEnabled || isFrozen || borrowCap.isMaxed}
           variant="outlined"
           onClick={() => openBorrow(underlyingAsset)}
           fullWidth

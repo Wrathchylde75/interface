@@ -1,8 +1,11 @@
 import { Tooltip, Typography } from '@mui/material';
 import { ReactNode } from 'react';
 import { BorrowDisabledToolTip } from 'src/components/infoTooltips/BorrowDisabledToolTip';
+import { BUSDOffBoardingTooltip } from 'src/components/infoTooltips/BUSDOffboardingToolTip';
+import { StETHCollateralToolTip } from 'src/components/infoTooltips/StETHCollateralToolTip';
 import { useAssetCaps } from 'src/hooks/useAssetCaps';
 import { CustomMarket } from 'src/ui-config/marketsConfig';
+import { DASHBOARD_LIST_COLUMN_WIDTHS } from 'src/utils/dashboardSortUtils';
 
 import { AMPLToolTip } from '../../../components/infoTooltips/AMPLToolTip';
 import { FrozenTooltip } from '../../../components/infoTooltips/FrozenTooltip';
@@ -42,14 +45,16 @@ export const ListItemWrapper = ({
 }: ListItemWrapperProps) => {
   const { supplyCap, borrowCap, debtCeiling } = useAssetCaps();
 
-  const showFrozenTooltip = frozen && symbol !== 'renFIL';
+  const showFrozenTooltip = frozen && symbol !== 'renFIL' && symbol !== 'BUSD';
   const showRenFilTooltip = frozen && symbol === 'renFIL';
   const showAmplTooltip = !frozen && symbol === 'AMPL';
+  const showstETHTooltip = symbol == 'stETH';
+  const showBUSDOffBoardingTooltip = symbol == 'BUSD';
   const showBorrowDisabledTooltip = !frozen && !borrowEnabled;
 
   return (
     <ListItem {...rest}>
-      <ListColumn maxWidth={160} isRow>
+      <ListColumn maxWidth={DASHBOARD_LIST_COLUMN_WIDTHS.CELL} isRow>
         <Link
           href={ROUTES.reserveOverview(detailsAddress, currentMarket)}
           noWrap
@@ -65,6 +70,8 @@ export const ListItemWrapper = ({
         {showFrozenTooltip && <FrozenTooltip symbol={symbol} currentMarket={currentMarket} />}
         {showRenFilTooltip && <RenFILToolTip />}
         {showAmplTooltip && <AMPLToolTip />}
+        {showstETHTooltip && <StETHCollateralToolTip />}
+        {showBUSDOffBoardingTooltip && <BUSDOffBoardingTooltip />}
         {showBorrowDisabledTooltip && (
           <BorrowDisabledToolTip symbol={symbol} currentMarket={currentMarket} />
         )}

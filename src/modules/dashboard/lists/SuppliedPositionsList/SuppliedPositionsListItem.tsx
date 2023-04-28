@@ -1,11 +1,9 @@
 import { Trans } from '@lingui/macro';
 import { Button } from '@mui/material';
-import {
-  ComputedUserReserveData,
-  ExtendedFormattedUser,
-} from 'src/hooks/app-data-provider/useAppDataProvider';
+import { useAppDataContext } from 'src/hooks/app-data-provider/useAppDataProvider';
 import { useAssetCaps } from 'src/hooks/useAssetCaps';
 import { useModalContext } from 'src/hooks/useModal';
+import { DashboardReserve } from 'src/utils/dashboardSortUtils';
 
 import { ListColumn } from '../../../../components/lists/ListColumn';
 import { useProtocolDataContext } from '../../../../hooks/useProtocolDataContext';
@@ -22,8 +20,8 @@ export const SuppliedPositionsListItem = ({
   underlyingBalanceUSD,
   usageAsCollateralEnabledOnUser,
   underlyingAsset,
-  user,
-}: ComputedUserReserveData & { user: ExtendedFormattedUser }) => {
+}: DashboardReserve) => {
+  const { user } = useAppDataContext();
   const { isIsolated, aIncentivesData, isFrozen, isActive } = reserve;
   const { currentMarketData, currentMarket } = useProtocolDataContext();
   const { openSupply, openWithdraw, openCollateralChange, openSwap } = useModalContext();
@@ -32,10 +30,12 @@ export const SuppliedPositionsListItem = ({
 
   const canBeEnabledAsCollateral =
     !debtCeiling.isMaxed &&
-    reserve.usageAsCollateralEnabled &&
+    reserve.reserveLiquidationThreshold !== '0' &&
     ((!reserve.isIsolated && !user.isInIsolationMode) ||
       user.isolatedReserve?.underlyingAsset === reserve.underlyingAsset ||
       (reserve.isIsolated && user.totalCollateralMarketReferenceCurrency === '0'));
+
+  const disableSwap = !isActive || reserve.symbol == 'stETH';
 
   return (
     <ListItemWrapper
@@ -85,7 +85,7 @@ export const SuppliedPositionsListItem = ({
 
         {isSwapButton ? (
           <Button
-            disabled={!isActive || isFrozen}
+            disabled={disableSwap}
             variant="outlined"
             onClick={() => openSwap(underlyingAsset)}
             data-cy={`swapButton`}
